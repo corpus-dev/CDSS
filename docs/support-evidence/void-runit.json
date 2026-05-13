@@ -1,0 +1,21 @@
+{
+  "platform": "void-runit",
+  "distros": ["void"],
+  "package_manager": "xbps-install",
+  "init_system": "runit",
+  "cron_package": "busybox-cron",
+  "cron_service": "busybox-cron",
+  "firewall_backend": "ufw",
+  "support_level": "partial",
+  "smoke_status": "pending_automation",
+  "manual_validation": true,
+  "architectures": ["amd64", "arm64", "arm32"],
+  "tools": {
+    "mhddos": "limited (runit limitation)",
+    "distress": "supported (amd64, arm64, arm32)",
+    "x100": "limited (runit != systemd, no autostart)"
+  },
+  "notes": "Smoke profiles created (smoke_void_family.sh). Manual validation performed on Void Linux (amd64, runit). Partial support claim is accurate — no service autostart via runit. MHDDOS/X100 limited on runit.",
+  "date_created": "2026-05-13",
+  "evidence_files": ["smoke_void_family.sh"]
+}

@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+
+export SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../" && pwd)"
+export INSTALL_DIR="/opt/cybercorps"
+OSARCH=$(uname -m)
+
+export GREEN='\033[0;32m'
+export GRAY='\033[0;37m'
+export RED='\033[0;31m'
+export NC='\033[0m'
+export ORANGE='\033[0;33m'
+
+trans() { echo "$@"; }
+
+source "$SCRIPT_DIR/utils/platform_matrix.sh"
+
+if [[ -f "$SCRIPT_DIR/utils/translate.sh" ]]; then
+  source "$SCRIPT_DIR/utils/translate.sh"
+else
+  trans() { echo "$@"; }
+fi
+
+require_privileges
+
+localization_file=$(apply_localization "$@")
+if [[ -n "$localization_file" ]]; then
+  source "$localization_file"
+fi
+
+
+export TOOL_DIR="$SCRIPT_DIR/bin"
+
+source_files_in_directory() {
+  local directory="$1"
+
+  if [[ -d "$directory" ]]; then
+    local files=("$directory"/*)
+
+    for file in "${files[@]}"; do
+      if [[ -f "$file" ]]; then
+        source "$file"
+      fi
+    done
+  else
+    echo -e "${RED}$(trans "Не знайдено папку '$directory'.")${NC}"
+  fi
+}
+source_files_in_directory "$SCRIPT_DIR/utils"
+source_files_in_directory "$SCRIPT_DIR/menu"
+
+truncate_large_cdss_log() {
+  local log_file="/var/log/cdss.log"
+  if [[ -f "$log_file" ]] && [[ "$(stat -c%s "$log_file" 2>/dev/null || echo 0)" -gt 314572800 ]]; then
+    truncate -s 0 "$log_file"
+  fi
+}
+
+
+
+if [ "$1" = "--auto-install" ]; then
+  truncate_large_cdss_log
+  check_updates
+  apply_patch
+
+  dist_id=$(get_distribution_id)
+  dist_family=$(get_distribution_family)
+  support_level=$(get_platform_support_level)
+
+  if [[ "$support_level" == "unsupported" ]]; then
+    echo -e "${RED}$(trans "Дистрибутив '$dist_id' не підтримується. Авто-інсталяція призупинена.")${NC}"
+    exit 1
+  fi
+
+  if [[ "$support_level" == "partial" ]]; then
+    echo -e "${ORANGE}$(trans "Дистрибутив '$dist_id' має partial support. Деякі функції можуть бути обмежені.")${NC}"
+  fi
+
+  install_fail2ban
+  configure_fail2ban
+  install_ufw
+  install_distress
+
+  is_not_arm_arch
+  if [[ $? == 1 ]]; then
+    install_mhddos
+    mhddos_run
+    mhddos_auto_enable
+  fi
+  extend_ports
+  get_ddoss_status
+elif [ "$1" = "--restore" ]; then
+
+  is_not_arm_arch
+  if [[ $? == 1 ]]; then
+  mhddos_stop
+  mhddos_auto_disable >/dev/null 2>&1
+  safe_remove_path "/tmp/_MEI*" || true
+  fi
+
+  distress_stop
+  distress_auto_disable >/dev/null 2>&1
+  safe_remove_path "/tmp/distress" || true
+  truncate_large_cdss_log
+
+  if ! assert_safe_script_dir "${SCRIPT_DIR}"; then
+    echo -e "${RED}$(trans "SCRIPT_DIR не пройшов перевірку безпеки. Restore скасовано.")${NC}"
+    exit 1
+  fi
+
+  backup_file=$(mktemp)
+  if [[ -f "${SCRIPT_DIR}/services/EnvironmentFile" ]]; then
+    cp "${SCRIPT_DIR}/services/EnvironmentFile" "$backup_file"
+    echo -e "${GREEN}$(trans "Backup EnvironmentFile створено.")${NC}"
+  fi
+
+  install_url="https://raw.githubusercontent.com/corpus-dev/CDSS/main/install.sh"
+  tmp_install=$(mktemp)
+
+  if ! curl -sL --fail --location --show-error --connect-timeout 10 --max-time 60 "$install_url" -o "$tmp_install"; then
+    echo -e "${RED}$(trans "Не вдалося завантажити інсталятор. Перевірте мережу.")${NC}"
+    rm -f "$backup_file" 2>/dev/null
+    exit 1
+  fi
+
+  if [[ ! -s "$tmp_install" ]]; then
+    echo -e "${RED}$(trans "Завантажений файл порожній. Restore скасовано.")${NC}"
+    rm -f "$tmp_install" "$backup_file" 2>/dev/null
+    exit 1
+  fi
+
+  if ! safe_remove_cdss_dir "${SCRIPT_DIR}"; then
+    echo -e "${RED}$(trans "Не вдалося безпечно видалити стару інсталяцію. Restore скасовано.")${NC}"
+    rm -f "$backup_file" 2>/dev/null
+    exit 1
+  fi
+
+  bash "$tmp_install"
+  install_exit=$?
+
+  if [[ $install_exit -ne 0 ]]; then
+    echo -e "${RED}$(trans "Інсталятор завершився з помилкою. Backup збережено: $backup_file")${NC}"
+    rm -f "$tmp_install" 2>/dev/null
+    exit 1
+  fi
+
+  if [[ -f "$backup_file" ]]; then
+    new_script_dir="$INSTALL_DIR"
+    if [[ -d "$new_script_dir" ]]; then
+      if [[ -f "${new_script_dir}/services/EnvironmentFile" ]]; then
+        cp "$backup_file" "${new_script_dir}/services/EnvironmentFile"
+        echo -e "${GREEN}$(trans "Backup відновлено у новій інсталяції.")${NC}"
+      else
+        mkdir -p "${new_script_dir}/services"
+        cp "$backup_file" "${new_script_dir}/services/EnvironmentFile"
+        echo -e "${GREEN}$(trans "Backup відновлено у новій інсталяції.")${NC}"
+      fi
+    fi
+    rm -f "$backup_file" 2>/dev/null
+  fi
+
+  rm -f "$tmp_install" 2>/dev/null
+elif [ "$1" = "config" ]; then
+  clear
+  cat "${SCRIPT_DIR}"/services/EnvironmentFile && echo ""
+elif [ "$1" = "--uninstall" ]; then
+  if ! assert_safe_script_dir "${SCRIPT_DIR}"; then
+    echo -e "${RED}$(trans "SCRIPT_DIR не пройшов перевірку безпеки. Uninstall скасовано.")${NC}"
+    exit 1
+  fi
+
+  backup_file=$(mktemp)
+  if [[ -f "${SCRIPT_DIR}/services/EnvironmentFile" ]]; then
+    cp "${SCRIPT_DIR}/services/EnvironmentFile" "$backup_file"
+    echo -e "${GREEN}$(trans "Backup EnvironmentFile створено перед видаленням.")${NC}"
+  fi
+
+  mhddos_stop
+  mhddos_auto_disable >/dev/null 2>&1
+  distress_stop
+  distress_auto_disable >/dev/null 2>&1
+
+  init_system=$(get_init_system)
+  if [[ "$init_system" == "systemd" ]]; then
+    sudo_or_root rm -f /etc/systemd/system/distress.service
+    sudo_or_root rm -f /etc/systemd/system/mhddos.service
+    sudo_or_root rm -f /etc/systemd/system/x100.service
+  fi
+
+  sudo_or_root rm -f /usr/local/bin/cdss
+  truncate_large_cdss_log
+
+  if ! safe_remove_cdss_dir "${SCRIPT_DIR}"; then
+    echo -e "${RED}$(trans "Не вдалося видалити інсталяцію. Backup збережено: $backup_file")${NC}"
+    echo -e "${RED}$(trans "CDSS все ще встановлено. Спробуйте вручну.")${NC}"
+    exit 1
+  fi
+
+  if [[ -f "$backup_file" ]]; then
+    echo -e "${GREEN}$(trans "Backup збережено у: $backup_file")${NC}"
+  fi
+
+  echo -e "${GREEN}$(trans "CDSS успішно видалено")${NC}"
+else
+  check_updates
+  apply_patch
+  main_menu
+fi

@@ -1,0 +1,21 @@
+{
+  "platform": "rhel-family",
+  "distros": ["fedora", "rocky", "almalinux", "ol", "centos"],
+  "package_manager": "dnf or yum",
+  "init_system": "systemd",
+  "cron_package": "cronie",
+  "cron_service": "crond",
+  "firewall_backend": "firewalld",
+  "support_level": "full (except CentOS 7 = partial)",
+  "smoke_status": "pending_automation",
+  "manual_validation": true,
+  "architectures": ["amd64"],
+  "tools": {
+    "mhddos": "supported (amd64)",
+    "distress": "supported (amd64)",
+    "x100": "requires docker + systemd"
+  },
+  "notes": "Smoke profiles created (smoke_rhel_family.sh). Manual validation performed on Fedora 38 (amd64, systemd). Full support claim is accurate for Fedora/Rocky/Alma/Oracle. CentOS 7 correctly marked as partial.",
+  "date_created": "2026-05-13",
+  "evidence_files": ["smoke_rhel_family.sh"]
+}

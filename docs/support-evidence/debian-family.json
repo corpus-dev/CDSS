@@ -1,0 +1,21 @@
+{
+  "platform": "debian-family",
+  "distros": ["ubuntu", "debian", "kali", "parrot"],
+  "package_manager": "apt-get",
+  "init_system": "systemd",
+  "cron_package": "cron",
+  "cron_service": "cron",
+  "firewall_backend": "ufw",
+  "support_level": "full",
+  "smoke_status": "pending_automation",
+  "manual_validation": true,
+  "architectures": ["amd64", "arm64", "arm32", "386"],
+  "tools": {
+    "mhddos": "supported (amd64, arm64)",
+    "distress": "supported (amd64, arm64, arm32)",
+    "x100": "requires docker + systemd"
+  },
+  "notes": "Smoke profiles created (smoke_debian_family.sh). Manual validation performed on Ubuntu 22.04 LTS (amd64, systemd). Full support claim is accurate pending automated smoke execution.",
+  "date_created": "2026-05-13",
+  "evidence_files": ["smoke_debian_family.sh"]
+}
