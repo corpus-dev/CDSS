@@ -131,7 +131,8 @@ initiate_x100() {
    if [[ $? == 1 ]]; then
       menu_items=("$(trans "Так")" "$(trans "Ні")")
        local res
-       res=$(display_menu "$(trans "X100 не встановлений, встановити?")" "${menu_items[@]}")
+        display_menu "$(trans "X100 не встановлений, встановити?")" "${menu_items[@]}"
+        res="$CDSS_SELECTION"
        case "$res" in
          "$(trans "Так")" )
            confirm_dialog "$(trans "Встановлюємо Х100")"
@@ -157,7 +158,8 @@ initiate_x100() {
    fi
     menu_items=("$active_disactive" "$(trans "Налаштування X100")"  "$(trans "Статус X100")" "$(trans "Повернутись назад")")
     local res
-    res=$(display_menu "X100" "${menu_items[@]}")
+     display_menu "X100" "${menu_items[@]}"
+     res="$CDSS_SELECTION"
 
    case "$res" in
     "$(trans "Запуск X100")" )
@@ -449,7 +451,8 @@ x100_configure_scheduler() {
 
 to_start_x100_schedule_running() {
     local menu_items=("$(trans "Так")" "$(trans "Ні")")
-    local res=$(display_menu "$(trans "Запустити X100 за розкладом?")" "${menu_items[@]}")
+    display_menu "$(trans "Запустити X100 за розкладом?")" "${menu_items[@]}"
+    res="$CDSS_SELECTION"
      case "$res" in
      "$(trans "Так")" )
        run_x100_on_schedule

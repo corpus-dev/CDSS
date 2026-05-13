@@ -49,9 +49,9 @@ install_mhddos() {
         regenerate_mhddos_service_file
         create_symlink
     }
-    install > /dev/null 2>&1
+    install 2>&1
     if [[ $? -ne 0 ]];then
-      confirm_dialog "$(trans "MHDDOS_PROXY не підтримує ARM32 та x86 (i386/i686)")"
+      confirm_dialog "$(trans "MHDDOS встановлення не вдалося. Перевірте інтернет-з'єднання.")"
     else
       confirm_dialog "$(trans "MHDDOS успішно встановлено")"
     fi
@@ -379,7 +379,8 @@ check_if_mhddos_running_on_schedule() {
 
 to_start_mhddos_schedule_running() {
     local menu_items=("$(trans "Так")" "$(trans "Ні")")
-    local res=$(display_menu "$(trans "Запустити MHDDOS за розкладом?")" "${menu_items[@]}")
+    display_menu "$(trans "Запустити MHDDOS за розкладом?")" "${menu_items[@]}"
+    res="$CDSS_SELECTION"
     case "$res" in
     "$(trans "Так")")
       run_mhddos_on_schedule
@@ -448,7 +449,8 @@ initiate_mhddos() {
         local active_disactive="$(trans "Запуск MHDDOS")"
       fi
       local menu_items=("$active_disactive" "$(trans "Налаштування MHDDOS")" "$(trans "Статус MHDDOS")" "$(trans "Повернутись назад")")
-      local res=$(display_menu "MHDDOS" "${menu_items[@]}")
+      display_menu "MHDDOS" "${menu_items[@]}"
+      res="$CDSS_SELECTION"
 
       case "$res" in
         "$(trans "Зупинка MHDDOS")" )

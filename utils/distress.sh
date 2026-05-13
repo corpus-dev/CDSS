@@ -42,7 +42,11 @@ install_distress() {
         regenerate_distress_service_file
         create_symlink
     }
-    install > /dev/null 2>&1
+    install 2>&1
+    if [[ $? -ne 0 ]]; then
+      confirm_dialog "$(trans "DISTRESS встановлення не вдалося. Перевірте інтернет-з'єднання.")"
+      return 1
+    fi
     confirm_dialog "$(trans "DISTRESS успішно встановлено")"
 }
 
@@ -475,7 +479,8 @@ check_if_distress_running_on_schedule() {
 
 to_start_distress_schedule_running() {
     local menu_items=("$(trans "Так")" "$(trans "Ні")")
-    local res=$(display_menu "$(trans "Запустити DISTRESS за розкладом?")" "${menu_items[@]}")
+    display_menu "$(trans "Запустити DISTRESS за розкладом?")" "${menu_items[@]}"
+    res="$CDSS_SELECTION"
     case "$res" in
     "$(trans "Так")")
       run_distress_on_schedule
@@ -545,8 +550,8 @@ initiate_distress() {
         local active_disactive="$(trans "Запуск DISTRESS")"
       fi
       local menu_items=("$active_disactive" "$(trans "Налаштування DISTRESS")" "$(trans "Статус DISTRESS")" "$(trans "Повернутись назад")")
-      local res
-res=$(display_menu "DISTRESS" "${menu_items[@]}")
+      display_menu "DISTRESS" "${menu_items[@]}"
+      res="$CDSS_SELECTION"
 
        case "$res" in
          "$(trans "Зупинка DISTRESS")" )
