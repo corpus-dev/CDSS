@@ -1,3 +1,5 @@
+set -uo pipefail
+
 update_env_user_id() {
   local new_user_id="$1"
   local environment_file="$2"
@@ -59,10 +61,10 @@ ddos() {
     "install_ddos_tools")
       clear
       echo -ne "\n"
-      echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}""\n"
-      echo -ne "${GREEN}$(trans "Надається Telegram ботом")${NC} ${ORANGE}"$(trans "В статусі відновлення, очікуйте на оновлення")${NC}""\n"
+      echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}\n"
+      echo -ne "${GREEN}$(trans "Надається Telegram ботом")${NC} ${ORANGE}$(trans "В статусі відновлення, очікуйте на оновлення")${NC}\n"
       echo -ne "\n"
-      echo -ne "${GREEN}$(trans "Щоб пропустити, натисніть Enter")${NC}""\n""\n"
+      echo -ne "${GREEN}$(trans "Щоб пропустити, натисніть Enter")${NC}\n\n"
       echo -ne "$(trans "Юзер ІД: ")"
       read -r user_id
 

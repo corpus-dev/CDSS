@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -uo pipefail
 # platform_matrix.sh — центральне джерело правди про підтримку платформ
 # Цей файл містить всі mapping-и для distro, arch, init, package, cron, firewall.
 
@@ -142,9 +143,11 @@ get_init_system() {
     return 0
   fi
 
-  if command -v sv >/dev/null 2>&1 && [[ -d /etc/runit/runlevel1 ]]; then
-    echo "runit"
-    return 0
+  if command -v sv >/dev/null 2>&1; then
+    if [[ -d /etc/runit/runlevel1 ]] || [[ -d /etc/runit ]] || [[ -d /run/runit ]]; then
+      echo "runit"
+      return 0
+    fi
   fi
 
   echo "unknown"
@@ -194,6 +197,9 @@ get_package_manager() {
       ;;
     void)
       echo "xbps-install"
+      ;;
+    alpine)
+      echo "apk"
       ;;
     gentoo)
       echo "emerge"
@@ -536,6 +542,15 @@ get_platform_support_level() {
     void)
       echo "partial"
       ;;
+    alpine)
+      echo "partial"
+      ;;
+    opensuse*|suse*)
+      echo "unsupported"
+      ;;
+    nixos)
+      echo "unsupported"
+      ;;
     gentoo)
       echo "unsupported"
       ;;
@@ -638,8 +653,10 @@ require_privileges() {
 
 sudo_or_root() {
   if is_root; then
+    logger "CDSS: root command: $*" 2>/dev/null || true
     "$@"
   else
+    logger "CDSS: sudo command: $*" 2>/dev/null || true
     sudo "$@"
   fi
 }

@@ -1,5 +1,7 @@
+set -uo pipefail
+
 main_menu() {
-  local menu_items=("$(trans "Статус атаки")" "$(trans "Розширення портів")" "DDOS" "$(trans "Налаштування безпеки")")
+  local menu_items=("$(trans "Статус атаки")" "$(trans "Розширення портів")" "DDOS" "$(trans "Налаштування безпеки")" "$(trans "Вихід")")
   local res
   res=$(display_menu "$(trans "Головне меню")" "${menu_items[@]}")
 
@@ -16,6 +18,10 @@ main_menu() {
       ;;
     "$(trans "Налаштування безпеки")")
       security_settings
+      ;;
+    "$(trans "Вихід")")
+      echo "$(trans "До побачення!")"
+      return 0
       ;;
     esac
     res=$(display_menu "$(trans "Головне меню")" "${menu_items[@]}")

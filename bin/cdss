@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
+set -uo pipefail
 
 export SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../" && pwd)"
 export INSTALL_DIR="/opt/cybercorps"
 OSARCH=$(uname -m)
 
-export GREEN='\033[0;32m'
-export GRAY='\033[0;37m'
-export RED='\033[0;31m'
-export NC='\033[0m'
-export ORANGE='\033[0;33m'
+GREEN='\033[0;32m'
+GRAY='\033[0;37m'
+RED='\033[0;31m'
+NC='\033[0m'
+ORANGE='\033[0;33m'
 
 trans() { echo "$@"; }
 
@@ -67,6 +68,9 @@ reload_runtime_files
 truncate_large_cdss_log() {
   local log_file="/var/log/cdss.log"
   if [[ -f "$log_file" ]] && [[ "$(stat -c%s "$log_file" 2>/dev/null || echo 0)" -gt 314572800 ]]; then
+    local archive_file="/var/log/cdss.log.archive.$(date +%s)"
+    cp "$log_file" "$archive_file" 2>/dev/null || true
+    chmod 600 "$archive_file" 2>/dev/null || true
     truncate -s 0 "$log_file"
   fi
 }
@@ -99,7 +103,7 @@ if [ "$1" = "--auto-install" ]; then
 
   is_not_arm_arch
   if [[ $? == 1 ]]; then
-    install_mhddos
+    confirm_dialog "$(trans "MHDDOS встановлено. Активувати атаку?")"
     mhddos_run
     mhddos_auto_enable
   fi
@@ -145,11 +149,9 @@ elif [ "$1" = "--restore" ]; then
     exit 1
   fi
 
-  if ! safe_remove_cdss_dir "${SCRIPT_DIR}"; then
-    echo -e "${RED}$(trans "Не вдалося безпечно видалити стару інсталяцію. Restore скасовано.")${NC}"
-    rm -f "$backup_file" 2>/dev/null
-    exit 1
-  fi
+  local install_checksum
+  install_checksum=$(sha256sum "$tmp_install" | cut -d' ' -f1)
+  echo "$(date '+%Y-%m-%d %H:%M:%S') [CDSS] install.sh checksum: $install_checksum" >> /var/log/cdss.log 2>/dev/null || true
 
   bash "$tmp_install"
   install_exit=$?
@@ -157,6 +159,12 @@ elif [ "$1" = "--restore" ]; then
   if [[ $install_exit -ne 0 ]]; then
     echo -e "${RED}$(trans "Інсталятор завершився з помилкою. Backup збережено: $backup_file")${NC}"
     rm -f "$tmp_install" 2>/dev/null
+    exit 1
+  fi
+
+  if ! safe_remove_cdss_dir "${SCRIPT_DIR}"; then
+    echo -e "${RED}$(trans "Не вдалося безпечно видалити стару інсталяцію. Restore скасовано.")${NC}"
+    rm -f "$backup_file" 2>/dev/null
     exit 1
   fi
 
@@ -204,6 +212,7 @@ elif [ "$1" = "--uninstall" ]; then
   fi
 
   sudo_or_root rm -f /usr/local/bin/cdss
+  cleanup_all_cdss_crons
   truncate_large_cdss_log
 
   if ! safe_remove_cdss_dir "${SCRIPT_DIR}"; then

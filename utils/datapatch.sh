@@ -1,3 +1,5 @@
+set -uo pipefail
+
 apply_patch() {
   local config_file="$1"
 
@@ -5,6 +7,8 @@ apply_patch() {
     echo "Config file '$config_file' not found or empty"
     return 1
   fi
+
+  confirm_dialog "$(trans "Застосувати патч конфігурації з дефолтними значеннями?")"
 
   ensure_config_section "$config_file" "distress"
   ensure_config_key "$config_file" "distress" "interface" ""

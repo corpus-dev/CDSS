@@ -1,0 +1,16 @@
+[Unit]
+Description=DISTRESS
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=10
+ExecStart=placeholder
+
+StandardOutput=append:/var/log/cdss.log
+StandardError=append:/var/log/cdss.log
+
+[Install]
+WantedBy=multi-user.target

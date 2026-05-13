@@ -1,3 +1,5 @@
+set -uo pipefail
+
 cdss_dialog() {
   dialog --ascii-lines --title "Execution Message" --infobox "$1" 10 40
 }

@@ -1,3 +1,5 @@
+set -uo pipefail
+
 show_log_tail() {
   local log_file="$1"
 
@@ -60,9 +62,9 @@ sudo_or_root rm -f /etc/systemd/system/mhddos.service
 sudo_or_root rm -f /etc/systemd/system/distress.service
 sudo_or_root rm -f /etc/systemd/system/x100.service
 
-sudo_or_root ln -sf "$SCRIPT_DIR"/services/mhddos.service /etc/systemd/system/mhddos.service >/dev/null 2>&1
-sudo_or_root ln -sf "$SCRIPT_DIR"/services/distress.service /etc/systemd/system/distress.service >/dev/null 2>&1
-sudo_or_root ln -sf "$SCRIPT_DIR"/services/x100.service /etc/systemd/system/x100.service >/dev/null 2>&1
+sudo_or_root ln -sf "$SCRIPT_DIR"/services/mhddos.service /etc/systemd/system/mhddos.service
+sudo_or_root ln -sf "$SCRIPT_DIR"/services/distress.service /etc/systemd/system/distress.service
+sudo_or_root ln -sf "$SCRIPT_DIR"/services/x100.service /etc/systemd/system/x100.service
 }
 
 stop_services() {

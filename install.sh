@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -uo pipefail
 
 export GREEN='\033[0;32m'
 export RED='\033[0;31m'

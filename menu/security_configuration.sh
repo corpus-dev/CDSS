@@ -1,3 +1,5 @@
+set -uo pipefail
+
 security_configuration() {
   local menu_items=()
   local uufw=""

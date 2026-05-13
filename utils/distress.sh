@@ -1,3 +1,5 @@
+set -uo pipefail
+
 install_distress() {
     local dist_family
     dist_family=$(get_distribution_family)
@@ -46,12 +48,12 @@ install_distress() {
 
 configure_distress() {
     clear
-    declare -A params;
+    local -A params;
 
 echo -e "${ORANGE}$(trans "Залишіть пустим якщо бажаєте видалити параметри")${NC}"
     echo -ne "\n"
-    echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}""\n"
-    echo -ne "${GREEN}$(trans "Надається Telegram ботом")${NC} ${ORANGE}"$(trans "В статусі відновлення, очікуйте на оновлення")${NC}""\n"
+    echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}\n"
+    echo -ne "${GREEN}$(trans "Надається Telegram ботом")${NC} ${ORANGE}$(trans "В статусі відновлення, очікуйте на оновлення")${NC}\n"
     echo -ne "\n"
     read -e -p "$(trans "Юзер ІД: ")" -i "$(get_distress_variable 'user-id')" user_id
     if [[ -n "$user_id" ]];then
@@ -398,13 +400,30 @@ distress_installed() {
 
 distress_configure_scheduler() {
   clear
-  echo -e "${GREEN}  .---------------- " $(trans "хвилина") " (0 - 59)
-  |  .------------- " $(trans "година") " (0 - 23)
-  |  |  .---------- " $(trans "день місяця") " (1 - 31)
-  |  |  |  .------- " $(trans "місяць") " (1 - 12)
-  |  |  |  |  .---- " $(trans "день тижня") " (0 - 6)
+  local min_label hour_label dom_label month_label dow_label
+  min_label="$(trans "хвилина")"
+  hour_label="$(trans "година")"
+  dom_label="$(trans "день місяця")"
+  month_label="$(trans "місяць")"
+  dow_label="$(trans "день тижня")"
+  local crontab_diagram
+  crontab_diagram=$(cat <<'CRONTAB_EOF'
+  .---------------- MINUTE_LABEL (0 - 59)
+  |  .------------- HOUR_LABEL (0 - 23)
+  |  |  .---------- DOM_LABEL (1 - 31)
+  |  |  |  .------- MONTH_LABEL (1 - 12)
+  |  |  |  |  .---- DOW_LABEL (0 - 6)
   |  |  |  |  |
-  *  *  *  *  *${NC}"
+  *  *  *  *  *
+CRONTAB_EOF
+)
+  crontab_diagram="${crontab_diagram//MINUTE_LABEL/$min_label}"
+  crontab_diagram="${crontab_diagram//HOUR_LABEL/$hour_label}"
+  crontab_diagram="${crontab_diagram//DOM_LABEL/$dom_label}"
+  crontab_diagram="${crontab_diagram//MONTH_LABEL/$month_label}"
+  crontab_diagram="${crontab_diagram//DOW_LABEL/$dow_label}"
+  crontab_diagram="${GREEN}${crontab_diagram}${NC}"
+  echo "$crontab_diagram"
 
   echo -ne "\n\n"
   echo -ne "${GREEN}$(trans "Або згенеруйте його за посиланням") ${NC}${RED}https://crontab.guru/${NC}"
@@ -502,11 +521,15 @@ run_distress_on_schedule() {
   cron_remove_job "x100_stop" || true
 
   if [[ -n "$cron_time_to_run" ]]; then
-    cron_install_job "distress_run" "$cron_time_to_run" ". $(shell_single_quote "${SCRIPT_DIR}/utils/distress.sh") && distress_run"
+    local distress_script_path
+    distress_script_path="$(shell_single_quote "${SCRIPT_DIR}/utils/distress.sh")"
+    cron_install_job "distress_run" "$cron_time_to_run" ". ${distress_script_path} && distress_run"
   fi
 
   if [[ -n "$cron_time_to_stop" ]]; then
-    cron_install_job "distress_stop" "$cron_time_to_stop" ". $(shell_single_quote "${SCRIPT_DIR}/utils/distress.sh") && distress_stop"
+    local distress_script_path
+    distress_script_path="$(shell_single_quote "${SCRIPT_DIR}/utils/distress.sh")"
+    cron_install_job "distress_stop" "$cron_time_to_stop" ". ${distress_script_path} && distress_stop"
   fi
 }
 
@@ -525,26 +548,26 @@ initiate_distress() {
       local res
 res=$(display_menu "DISTRESS" "${menu_items[@]}")
 
-      case "$res" in
-        "$(trans "Зупинка DISTRESS")")
-           distress_stop
-           distress_get_status
-        ;;
-        "$(trans "Запуск DISTRESS")")
-            distress_run
+       case "$res" in
+         "$(trans "Зупинка DISTRESS")" )
+            distress_stop
             distress_get_status
-        ;;
-        "$(trans "Налаштування DISTRESS")")
-           configure_distress
-           return 0
          ;;
-        "$(trans "Статус DISTRESS")")
-          distress_get_status
-        ;;
-        "$(trans "Повернутись назад")")
-          ddos_tool_managment
-        ;;
-      esac
+         "$(trans "Запуск DISTRESS")" )
+             distress_run
+             distress_get_status
+         ;;
+         "$(trans "Налаштування DISTRESS")" )
+            configure_distress
+            return 0
+          ;;
+         "$(trans "Статус DISTRESS")" )
+           distress_get_status
+         ;;
+         "$(trans "Повернутись назад")" )
+           ddos_tool_managment
+         ;;
+       esac
   fi
 }
 

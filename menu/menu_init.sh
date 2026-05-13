@@ -1,3 +1,5 @@
+set -uo pipefail
+
 display_menu() {
   local title="$1"
   shift

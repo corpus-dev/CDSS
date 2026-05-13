@@ -1,3 +1,5 @@
+set -uo pipefail
+
 validate_cron_schedule() {
   local schedule="$1"
 
@@ -31,6 +33,8 @@ cron_list() {
 cleanup_legacy_cron_lines() {
   local tmp_file
   tmp_file=$(mktemp)
+  local lockfile
+  lockfile=$(mktemp)
 
   local crontab_content
   crontab_content=$(sudo_or_root crontab -l 2>/dev/null || true)
@@ -54,12 +58,20 @@ cleanup_legacy_cron_lines() {
   done <<< "$crontab_content"
 
   if [[ -s "$tmp_file" ]]; then
+    exec 200>"$lockfile"
+    flock -x 200
     sudo_or_root crontab "$tmp_file" 2>/dev/null
+    flock -u 200
+    exec 200>&-
   else
     : > "$tmp_file"
+    exec 200>"$lockfile"
+    flock -x 200
     sudo_or_root crontab "$tmp_file" 2>/dev/null
+    flock -u 200
+    exec 200>&-
   fi
-  rm -f "$tmp_file"
+  rm -f "$tmp_file" "$lockfile"
 }
 
 cron_has_job() {

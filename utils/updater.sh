@@ -1,3 +1,5 @@
+set -uo pipefail
+
 env_file="/etc/environment"
 
 source "${SCRIPT_DIR}/utils/platform_matrix.sh"

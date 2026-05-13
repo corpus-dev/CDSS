@@ -1,4 +1,4 @@
-source "${SCRIPT_DIR}/utils/definitions.sh"
+set -uo pipefail
 
 install_ufw() {
   cdss_dialog "$(trans "Встановлюємо фаєрвол")"

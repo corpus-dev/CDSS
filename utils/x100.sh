@@ -1,3 +1,5 @@
+set -uo pipefail
+
 x100_run() {
   service_stop distress
   service_stop mhddos
@@ -130,16 +132,16 @@ initiate_x100() {
       menu_items=("$(trans "Так")" "$(trans "Ні")")
        local res
        res=$(display_menu "$(trans "X100 не встановлений, встановити?")" "${menu_items[@]}")
-      case "$res" in
-        "$(trans "Так")")
-          confirm_dialog "$(trans "Встановлюємо Х100")"
-          install_x100
-          confirm_dialog "$(trans "Х100 успішно встановлено")"
-        ;;
-        "$(trans "Ні")")
-          ddos_tool_managment
-        ;;
-      esac
+       case "$res" in
+         "$(trans "Так")" )
+           confirm_dialog "$(trans "Встановлюємо Х100")"
+           install_x100
+           confirm_dialog "$(trans "Х100 успішно встановлено")"
+         ;;
+         "$(trans "Ні")" )
+           ddos_tool_managment
+         ;;
+       esac
    fi
    docker_installed
    if [[ $? == 1 ]]; then
@@ -157,26 +159,26 @@ initiate_x100() {
     local res
     res=$(display_menu "X100" "${menu_items[@]}")
 
-  case "$res" in
-   "$(trans "Запуск X100")")
-      x100_run
-      x100_get_status
-    ;;
-   "$(trans "Зупинка X100")")
-      x100_stop
-      x100_get_status
-    ;;
-        "$(trans "Налаштування X100")")
-       configure_x100
-       return 0
+   case "$res" in
+    "$(trans "Запуск X100")" )
+       x100_run
+       x100_get_status
      ;;
-   "$(trans "Статус X100")")
-      x100_get_status
-    ;;
-   "$(trans "Повернутись назад")")
-      ddos_tool_managment
-    ;;
-   esac
+    "$(trans "Зупинка X100")" )
+       x100_stop
+       x100_get_status
+     ;;
+         "$(trans "Налаштування X100")" )
+        configure_x100
+        return 0
+      ;;
+    "$(trans "Статус X100")" )
+       x100_get_status
+     ;;
+    "$(trans "Повернутись назад")" )
+       ddos_tool_managment
+     ;;
+    esac
 }
 
 configure_x100() {
@@ -448,16 +450,16 @@ x100_configure_scheduler() {
 to_start_x100_schedule_running() {
     local menu_items=("$(trans "Так")" "$(trans "Ні")")
     local res=$(display_menu "$(trans "Запустити X100 за розкладом?")" "${menu_items[@]}")
-    case "$res" in
-    "$(trans "Так")")
-      run_x100_on_schedule
-      confirm_dialog "$(trans "X100 буде ЗАПУЩЕНО за розкладом")"
-      autoload_configuration
-    ;;
-    "$(trans "Ні")")
-      autoload_configuration
-    ;;
-    esac
+     case "$res" in
+     "$(trans "Так")" )
+       run_x100_on_schedule
+       confirm_dialog "$(trans "X100 буде ЗАПУЩЕНО за розкладом")"
+       autoload_configuration
+     ;;
+     "$(trans "Ні")" )
+       autoload_configuration
+     ;;
+     esac
 }
 
 run_x100_on_schedule() {

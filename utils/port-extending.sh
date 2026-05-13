@@ -1,3 +1,5 @@
+set -uo pipefail
+
 extend_ports() {
   local port_range_string="net.ipv4.ip_local_port_range=16384 65535"
   local sysctl_d_file="/etc/sysctl.d/99-cdss-port-range.conf"

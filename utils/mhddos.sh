@@ -1,3 +1,5 @@
+set -uo pipefail
+
 install_mhddos() {
     local dist_family
     dist_family=$(get_distribution_family)
@@ -57,11 +59,11 @@ install_mhddos() {
 
 configure_mhddos() {
     clear
-    declare -A params
+    local -A params
 echo -e "${ORANGE}$(trans "Залишіть пустим якщо бажаєте видалити параметри")${NC}"
     echo -ne "\n"
-    echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}""\n"
-    echo -ne "${GREEN}$(trans "Надається Telegram ботом")${NC} ${ORANGE}"$(trans "В статусі відновлення, очікуйте на оновлення")${NC}""\n"
+    echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}\n"
+    echo -ne "${GREEN}$(trans "Надається Telegram ботом")${NC} ${ORANGE}$(trans "В статусі відновлення, очікуйте на оновлення")${NC}\n"
     echo -ne "\n"
     read -e -p "$(trans "Юзер ІД: ")" -i "$(get_mhddos_variable 'user-id')" user_id
     if [[ -n "$user_id" ]];then
@@ -128,9 +130,9 @@ read -e -p "$(trans "Threads: ")" -i "$(get_mhddos_variable "threads")" threads
     echo -e "${ORANGE}$(trans "Мережеві інтерфейси (через пробіл: eth0 eth1 тощо.)")${NC}"
     read -e -p "$(trans "Інтерфейси: ")"  -i "$(get_mhddos_variable 'ifaces')" interface
     if [[ -n "$interface" ]];then
-      params[ifaces="$interface"]
+      params["ifaces"]="$interface"
     else
-      params[ifaces]=" "
+      params["ifaces"]=" "
     fi
 
     for i in "${!params[@]}"; do
@@ -302,13 +304,30 @@ is_not_arm_arch() {
 
 mhddos_configure_scheduler() {
   clear
-  echo -e "${GREEN}  .---------------- " $(trans "хвилина") " (0 - 59)
-  |  .------------- " $(trans "година") " (0 - 23)
-  |  |  .---------- " $(trans "день місяця") " (1 - 31)
-  |  |  |  .------- " $(trans "місяць") " (1 - 12)
-  |  |  |  |  .---- " $(trans "день тижня") " (0 - 6)
+  local min_label hour_label dom_label month_label dow_label
+  min_label="$(trans "хвилина")"
+  hour_label="$(trans "година")"
+  dom_label="$(trans "день місяця")"
+  month_label="$(trans "місяць")"
+  dow_label="$(trans "день тижня")"
+  local crontab_diagram
+  crontab_diagram=$(cat <<'CRONTAB_EOF'
+  .---------------- MINUTE_LABEL (0 - 59)
+  |  .------------- HOUR_LABEL (0 - 23)
+  |  |  .---------- DOM_LABEL (1 - 31)
+  |  |  |  .------- MONTH_LABEL (1 - 12)
+  |  |  |  |  .---- DOW_LABEL (0 - 6)
   |  |  |  |  |
-  *  *  *  *  *${NC}"
+  *  *  *  *  *
+CRONTAB_EOF
+)
+  crontab_diagram="${crontab_diagram//MINUTE_LABEL/$min_label}"
+  crontab_diagram="${crontab_diagram//HOUR_LABEL/$hour_label}"
+  crontab_diagram="${crontab_diagram//DOM_LABEL/$dom_label}"
+  crontab_diagram="${crontab_diagram//MONTH_LABEL/$month_label}"
+  crontab_diagram="${crontab_diagram//DOW_LABEL/$dow_label}"
+  crontab_diagram="${GREEN}${crontab_diagram}${NC}"
+  echo "$crontab_diagram"
 
   echo -ne "\n\n"
   echo -ne "${GREEN}$(trans "Або згенеруйте його за посиланням") ${NC}${RED}https://crontab.guru/${NC}"
@@ -398,11 +417,15 @@ run_mhddos_on_schedule() {
   cron_remove_job "x100_run" || true
   cron_remove_job "x100_stop" || true
   if [[ -n "$cron_time_to_run" ]]; then
-    cron_install_job "mhddos_run" "$cron_time_to_run" ". $(shell_single_quote "${SCRIPT_DIR}/utils/mhddos.sh") && mhddos_run"
+    local mhddos_script_path
+    mhddos_script_path="$(shell_single_quote "${SCRIPT_DIR}/utils/mhddos.sh")"
+    cron_install_job "mhddos_run" "$cron_time_to_run" ". ${mhddos_script_path} && mhddos_run"
   fi
 
   if [[ -n "$cron_time_to_stop" ]]; then
-    cron_install_job "mhddos_stop" "$cron_time_to_stop" ". $(shell_single_quote "${SCRIPT_DIR}/utils/mhddos.sh") && mhddos_stop"
+    local mhddos_script_path
+    mhddos_script_path="$(shell_single_quote "${SCRIPT_DIR}/utils/mhddos.sh")"
+    cron_install_job "mhddos_stop" "$cron_time_to_stop" ". ${mhddos_script_path} && mhddos_stop"
   fi
 }
 
@@ -428,22 +451,22 @@ initiate_mhddos() {
       local res=$(display_menu "MHDDOS" "${menu_items[@]}")
 
       case "$res" in
-        "$(trans "Зупинка MHDDOS")")
+        "$(trans "Зупинка MHDDOS")" )
           mhddos_stop
           mhddos_get_status
         ;;
-        "$(trans "Запуск MHDDOS")")
+        "$(trans "Запуск MHDDOS")" )
           mhddos_run
           mhddos_get_status
         ;;
-        "$(trans "Налаштування MHDDOS")")
+        "$(trans "Налаштування MHDDOS")" )
            configure_mhddos
            return 0
-         ;;
-        "$(trans "Статус MHDDOS")")
+          ;;
+        "$(trans "Статус MHDDOS")" )
           mhddos_get_status
         ;;
-        "$(trans "Повернутись назад")")
+        "$(trans "Повернутись назад")" )
           ddos_tool_managment
         ;;
       esac

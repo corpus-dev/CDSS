@@ -1,3 +1,5 @@
+set -uo pipefail
+
 get_distribution() {
   local lsb_dist=""
 
@@ -284,11 +286,14 @@ safe_remove_path() {
 
 safe_remove_tmp_mei_dirs() {
   local mei_dir
+  set -f
   for mei_dir in /tmp/_MEI*; do
     if [[ -d "$mei_dir" ]] && [[ "$mei_dir" == /tmp/_MEI* ]]; then
-      rm -rf "$mei_dir" 2>/dev/null
+      echo "$(date '+%Y-%m-%d %H:%M:%S') [CDSS] Removing PyInstaller temp dir: $mei_dir" >> /var/log/cdss.log 2>/dev/null || true
+      rm -rf "$mei_dir"
     fi
   done
+  set +f
   return 0
 }
 
@@ -315,7 +320,16 @@ safe_remove_cdss_dir() {
       ;;
   esac
 
-  rm -rf "$resolved_dir" 2>/dev/null
+  case "$resolved_dir" in
+    */cdss*) ;;
+    *)
+      cdss_dialog "$(trans "Resolved директорія '$resolved_dir' не містить 'cdss'. Перевірте шлях.")"
+      return 1
+      ;;
+  esac
+
+  echo "$(date '+%Y-%m-%d %H:%M:%S') [CDSS] Removing CDSS directory: $resolved_dir" >> /var/log/cdss.log 2>/dev/null || true
+  rm -rfv "$resolved_dir"
 
   if [[ -e "$resolved_dir" ]]; then
     cdss_dialog "$(trans "Видалення '$resolved_dir' не вдалося. Директорія все ще існує.")"
@@ -413,7 +427,17 @@ set_config_value() {
     return 1
   fi
 
+  local lockfile
+  lockfile=$(mktemp)
+  exec 200>"$lockfile"
+  flock -x 200
   mv -f "$tmp_file" "$config_file"
+  if [[ "$config_file" == *"EnvironmentFile"* ]]; then
+    sudo_or_root chmod 600 "$config_file" 2>/dev/null || true
+  fi
+  flock -u 200
+  exec 200>&-
+  rm -f "$lockfile"
   return 0
 }
 
@@ -478,8 +502,9 @@ shell_single_quote() {
     return 1
   fi
 
-  local escaped="${arg//\'/\'\\\'\'}"
-  echo "'${escaped}'"
+  local escaped
+  escaped="${arg//\'/\'\\\'\'}"
+  printf "'%s'" "$escaped"
 }
 
 service_is_active() {

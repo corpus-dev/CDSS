@@ -1,3 +1,5 @@
+set -uo pipefail
+
 autoload_configuration() {
   local menu_items=()
   local mhddos_item_menu

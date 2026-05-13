@@ -1,3 +1,5 @@
+set -uo pipefail
+
 security_settings() {
   local menu_items=("$(trans "Встановлення захисту")" "$(trans "Налаштування захисту")" "$(trans "Повернутись назад")")
   local res
