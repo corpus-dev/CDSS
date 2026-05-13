@@ -45,16 +45,26 @@ install_mhddos() {
         esac
 
         sudo_or_root curl -Lo mhddos_proxy_linux "$package"
+        if [[ $? -ne 0 ]]; then
+          return 1
+        fi
+        if [[ ! -s mhddos_proxy_linux ]]; then
+          return 1
+        fi
         sudo_or_root chmod +x mhddos_proxy_linux
-        regenerate_mhddos_service_file
-        create_symlink
     }
     install 2>&1
     if [[ $? -ne 0 ]];then
       confirm_dialog "$(trans "MHDDOS встановлення не вдалося. Перевірте інтернет-з'єднання.")"
-    else
-      confirm_dialog "$(trans "MHDDOS успішно встановлено")"
+      return 1
     fi
+    if [[ ! -f "$TOOL_DIR/mhddos_proxy_linux" ]]; then
+      confirm_dialog "$(trans "MHDDOS бінарник не знайдено після встановлення.")"
+      return 1
+    fi
+    regenerate_mhddos_service_file
+    create_symlink
+    confirm_dialog "$(trans "MHDDOS успішно встановлено")"
 }
 
 configure_mhddos() {

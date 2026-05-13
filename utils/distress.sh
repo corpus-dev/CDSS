@@ -34,19 +34,30 @@ install_distress() {
           *)
             confirm_dialog "$(trans "Неможливо визначити розрядность операційної системи")"
             ddos_tool_managment
+            return 1
           ;;
         esac
 
         sudo_or_root curl -Lo distress "$package"
+        if [[ $? -ne 0 ]]; then
+          return 1
+        fi
+        if [[ ! -s distress ]]; then
+          return 1
+        fi
         sudo_or_root chmod +x distress
-        regenerate_distress_service_file
-        create_symlink
     }
     install 2>&1
     if [[ $? -ne 0 ]]; then
       confirm_dialog "$(trans "DISTRESS встановлення не вдалося. Перевірте інтернет-з'єднання.")"
       return 1
     fi
+    if [[ ! -f "$TOOL_DIR/distress" ]]; then
+      confirm_dialog "$(trans "DISTRESS бінарник не знайдено після встановлення.")"
+      return 1
+    fi
+    regenerate_distress_service_file
+    create_symlink
     confirm_dialog "$(trans "DISTRESS успішно встановлено")"
 }
 
