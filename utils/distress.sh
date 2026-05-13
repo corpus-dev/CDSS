@@ -51,7 +51,7 @@ configure_distress() {
 echo -e "${ORANGE}$(trans "Залишіть пустим якщо бажаєте видалити параметри")${NC}"
     echo -ne "\n"
     echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}""\n"
-    echo -ne "${GREEN}$(trans "Надається Telegram ботом")${NC} ${ORANGE}@itarmy_stats_bot${NC}""\n"
+    echo -ne "${GREEN}$(trans "Надається Telegram ботом")${NC} ${ORANGE}"$(trans "В статусі відновлення, очікуйте на оновлення")${NC}""\n"
     echo -ne "\n"
     read -e -p "$(trans "Юзер ІД: ")" -i "$(get_distress_variable 'user-id')" user_id
     if [[ -n "$user_id" ]];then

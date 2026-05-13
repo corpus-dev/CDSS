@@ -60,7 +60,7 @@ ddos() {
       clear
       echo -ne "\n"
       echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}""\n"
-      echo -ne "${GREEN}$(trans "Надається Telegram ботом")${NC} ${ORANGE}@itarmy_stats_bot${NC}""\n"
+      echo -ne "${GREEN}$(trans "Надається Telegram ботом")${NC} ${ORANGE}"$(trans "В статусі відновлення, очікуйте на оновлення")${NC}""\n"
       echo -ne "\n"
       echo -ne "${GREEN}$(trans "Щоб пропустити, натисніть Enter")${NC}""\n""\n"
       echo -ne "$(trans "Юзер ІД: ")"
