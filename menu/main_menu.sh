@@ -19,6 +19,11 @@ main_menu() {
     "$(trans "Налаштування безпеки")")
       security_settings
       ;;
+    "")
+      reset
+      clear
+      exit 0
+      ;;
     esac
     res=$(display_menu "$(trans "Головне меню")" "${menu_items[@]}")
   done
