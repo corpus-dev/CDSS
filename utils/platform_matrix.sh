@@ -306,6 +306,48 @@ get_cron_service_name() {
   esac
 }
 
+platform_service_is_active() {
+  local service_name="$1"
+  local init_system
+  init_system=$(get_init_system)
+
+  case "$init_system" in
+    systemd)
+      command -v systemctl >/dev/null 2>&1 && sudo_or_root systemctl is-active "$service_name" >/dev/null 2>&1
+      ;;
+    openrc)
+      command -v rc-service >/dev/null 2>&1 && sudo_or_root rc-service "$service_name" status >/dev/null 2>&1
+      ;;
+    runit)
+      command -v sv >/dev/null 2>&1 && sudo_or_root sv status "$service_name" >/dev/null 2>&1
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+platform_service_start() {
+  local service_name="$1"
+  local init_system
+  init_system=$(get_init_system)
+
+  case "$init_system" in
+    systemd)
+      command -v systemctl >/dev/null 2>&1 && sudo_or_root systemctl start "$service_name" >/dev/null 2>&1
+      ;;
+    openrc)
+      command -v rc-service >/dev/null 2>&1 && sudo_or_root rc-service "$service_name" start >/dev/null 2>&1
+      ;;
+    runit)
+      command -v sv >/dev/null 2>&1 && sudo_or_root sv start "$service_name" >/dev/null 2>&1
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 ensure_cron_installed() {
   local cron_pkg
   cron_pkg=$(get_cron_package_name)
@@ -344,9 +386,9 @@ ensure_cron_running() {
     return 1
   fi
 
-  if ! service_is_active "$cron_svc"; then
+  if ! platform_service_is_active "$cron_svc"; then
     echo -e "${GREEN}$(trans "Запуск cron service: $cron_svc")${NC}"
-    if service_start "$cron_svc"; then
+    if platform_service_start "$cron_svc"; then
       echo -e "${GREEN}$(trans "Cron service '$cron_svc' запущено")${NC}"
       return 0
     else

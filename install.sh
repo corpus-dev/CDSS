@@ -6,12 +6,67 @@ export NC='\033[0m'
 export ORANGE='\033[0;33m'
 
 WORKING_DIR="/opt/cybercorps"
+INSTALL_SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd -P)"
+RAW_BASE_URL="${CDSS_RAW_BASE_URL:-https://raw.githubusercontent.com/corpus-dev/CDSS/main}"
+BOOTSTRAP_DIR=""
 
-source "$(dirname "$0")/utils/platform_matrix.sh"
+cleanup_bootstrap_dir() {
+  if [[ -n "${BOOTSTRAP_DIR:-}" && -d "$BOOTSTRAP_DIR" ]]; then
+    rm -rf "$BOOTSTRAP_DIR"
+  fi
+}
 
-if [[ -f "$(dirname "$0")/utils/translate.sh" ]]; then
-  source "$(dirname "$0")/utils/translate.sh"
-else
+source_cdss_file() {
+  local rel_path="$1"
+  local required="${2:-required}"
+  local local_path="${INSTALL_SOURCE_DIR}/${rel_path}"
+
+  if [[ -f "$local_path" ]]; then
+    if source "$local_path"; then
+      return 0
+    fi
+
+    if [[ "$required" == "required" ]]; then
+      echo -e "${RED}Failed to load required CDSS installer helper: ${rel_path}${NC}"
+      exit 1
+    fi
+
+    return 1
+  fi
+
+  if ! command -v curl >/dev/null 2>&1; then
+    if [[ "$required" == "required" ]]; then
+      echo -e "${RED}curl is required to bootstrap CDSS installer helpers.${NC}"
+      exit 1
+    fi
+    return 1
+  fi
+
+  if [[ -z "$BOOTSTRAP_DIR" ]]; then
+    BOOTSTRAP_DIR="$(mktemp -d)"
+    trap cleanup_bootstrap_dir EXIT
+  fi
+
+  local download_path="${BOOTSTRAP_DIR}/${rel_path}"
+  mkdir -p "$(dirname "$download_path")"
+
+  if curl -fsSL "${RAW_BASE_URL}/${rel_path}" -o "$download_path"; then
+    if source "$download_path"; then
+      return 0
+    fi
+  fi
+
+  if [[ "$required" == "required" ]]; then
+    echo -e "${RED}Failed to load required CDSS installer helper: ${rel_path}${NC}"
+    exit 1
+  fi
+
+  return 1
+}
+
+source_cdss_file "utils/platform_matrix.sh"
+
+if ! source_cdss_file "utils/translate.sh" optional; then
   trans() { echo "$@"; }
 fi
 
@@ -81,9 +136,9 @@ done
 
 if [[ -d "$WORKING_DIR" ]] && [[ "$(ls -A "$WORKING_DIR")" ]]; then
   echo -e "${GREEN}$(trans "CDSS вже встановлено. Запускаємо оновлення...")${NC}"
+  export SCRIPT_DIR="${WORKING_DIR}"
   source "${WORKING_DIR}/utils/updater.sh"
   source "${WORKING_DIR}/utils/translate.sh"
-  export SCRIPT_DIR="${WORKING_DIR}/"
   update_cdss
 else
   sudo_or_root mkdir -p "$WORKING_DIR"
