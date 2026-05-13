@@ -70,6 +70,11 @@ if ! source_cdss_file "utils/translate.sh" optional; then
   trans() { echo "$@"; }
 fi
 
+install_cdss_command() {
+  sudo_or_root chmod +x "$WORKING_DIR/bin/cdss"
+  sudo_or_root ln -sf "$WORKING_DIR/bin/cdss" /usr/local/bin/cdss
+}
+
 require_privileges
 
 dist_id=$(get_distribution_id)
@@ -140,6 +145,7 @@ if [[ -d "$WORKING_DIR" ]] && [[ "$(ls -A "$WORKING_DIR")" ]]; then
   source "${WORKING_DIR}/utils/updater.sh"
   source "${WORKING_DIR}/utils/translate.sh"
   update_cdss
+  install_cdss_command
 else
   sudo_or_root mkdir -p "$WORKING_DIR"
   sudo_or_root chown "$(whoami)" "$WORKING_DIR"
@@ -151,7 +157,6 @@ else
   source "$WORKING_DIR/utils/datapatch.sh"
   apply_patch "$WORKING_DIR/services/EnvironmentFile"
 
-  sudo_or_root chmod +x "$WORKING_DIR/bin/cdss"
-  sudo_or_root ln -sf "$WORKING_DIR/bin/cdss" /usr/local/bin/cdss
+  install_cdss_command
   echo -e "${GREEN}$(trans "CDSS встановлено! Запустіть команду 'cdss' для початку.")${NC}"
 fi
