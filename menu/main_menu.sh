@@ -21,7 +21,7 @@ main_menu() {
       ;;
     "$(trans "Вихід")")
       echo "$(trans "До побачення!")"
-      return 0
+      exit 0
       ;;
     esac
     res=$(display_menu "$(trans "Головне меню")" "${menu_items[@]}")

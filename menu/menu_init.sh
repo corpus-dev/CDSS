@@ -37,10 +37,15 @@ display_menu() {
         echo -e "  $i) $opt"
         ((i++))
       done
+      echo -e "  0) $(trans "Вихід")"
       echo -ne "\nОберіть опцію: "
       read -r choice
 
       if [[ "$choice" =~ ^[0-9]+$ ]]; then
+        if [[ "$choice" -eq 0 ]]; then
+          echo "$(trans "До побачення!")"
+          exit 0
+        fi
         idx=$((choice - 1))
         if [[ $idx -ge 0 && $idx -lt ${#options[@]} ]]; then
           echo "${options[$idx]}"
