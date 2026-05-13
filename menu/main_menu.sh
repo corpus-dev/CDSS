@@ -20,6 +20,7 @@ main_menu() {
       security_settings
       ;;
     "")
+      stty sane
       clear
       exit 0
       ;;

@@ -15,8 +15,9 @@ display_menu() {
     selection=$(dialog --ascii-lines --clear --stdout --cancel-label "$(trans "Вихід")" --title "$title" \
       --menu "$(trans "Оберіть опцію:")" 0 0 0 "${dialog_args[@]}")
 
-
     if [[ -z "$selection" ]]; then
+      pkill -9 dialog 2>/dev/null || true
+      stty sane
       clear
       exit 0
     fi
