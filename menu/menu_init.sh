@@ -17,7 +17,6 @@ display_menu() {
 
 
     if [[ -z "$selection" ]]; then
-      reset
       clear
       exit 0
     fi

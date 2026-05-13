@@ -20,7 +20,6 @@ main_menu() {
       security_settings
       ;;
     "")
-      reset
       clear
       exit 0
       ;;
