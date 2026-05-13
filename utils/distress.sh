@@ -398,7 +398,7 @@ distress_installed() {
 
 distress_configure_scheduler() {
   clear
-  echo -ne "${GREEN}  .---------------- $(trans "хвилина") (0 - 59)
+  echo -e "${GREEN}  .---------------- $(trans "хвилина") (0 - 59)
   |  .------------- $(trans "година") (0 - 23)
   |  |  .---------- $(trans "день місяця") (1 - 31)
   |  |  |  .------- $(trans "місяць") (1 - 12)

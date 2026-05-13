@@ -50,13 +50,13 @@ update_env_user_id() {
 }
 
 ddos() {
-  local menu_items=("$(trans "Встановлення ддос інструментів")" "$(trans "Управління ддос інструментами")" "$(trans "Повернутись назад")")
+  local menu_items=("install_ddos_tools" "manage_ddos_tools" "go_back")
   local res
   res=$(display_menu "DDOS" "${menu_items[@]}")
 
   while true; do
     case "$res" in
-    "$(trans "Встановлення ддос інструментів")")
+    "install_ddos_tools")
       clear
       echo -ne "\n"
       echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}""\n"
@@ -80,10 +80,10 @@ ddos() {
 
       install_distress
       ;;
-    "$(trans "Управління ддос інструментами")")
+    "manage_ddos_tools")
       ddos_tool_managment
       ;;
-    "$(trans "Повернутись назад")")
+    "go_back")
       return 0
       ;;
     esac
