@@ -8,7 +8,7 @@ apply_patch() {
     return 1
   fi
 
-  confirm_dialog "$(trans "Застосувати патч конфігурації з дефолтними значеннями?")"
+  echo -e "${GREEN}Застосовую патч конфігурації з дефолтними значеннями...${NC}"
 
   ensure_config_section "$config_file" "distress"
   ensure_config_key "$config_file" "distress" "interface" ""
