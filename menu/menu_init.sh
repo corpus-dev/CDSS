@@ -16,12 +16,9 @@ display_menu() {
       --menu "$(trans "Оберіть опцію:")" 0 0 0 "${dialog_args[@]}")
 
     if [[ -z "$selection" ]]; then
-      if tty_path=$(tty 2>/dev/null); then
-        clear >"$tty_path"
-      else
-        clear
-      fi
-      echo "Exiting..."
+      reset
+      clear
+      echo "$(trans "До побачення!")"
       exit 0
     fi
     echo "$selection"
