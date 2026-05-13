@@ -1,4 +1,4 @@
-﻿autoload_configuration() {
+autoload_configuration() {
   local menu_items=()
   local mhddos_item_menu
   local mhddos_scheduler

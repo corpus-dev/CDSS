@@ -1,4 +1,4 @@
-﻿security_settings() {
+security_settings() {
   local menu_items=("$(trans "Встановлення захисту")" "$(trans "Налаштування захисту")" "$(trans "Повернутись назад")")
   local res
   res=$(display_menu "$(trans "Налаштування безпеки")" "${menu_items[@]}")

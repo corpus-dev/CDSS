@@ -1,4 +1,4 @@
-﻿main_menu() {
+main_menu() {
   local menu_items=("$(trans "Статус атаки")" "$(trans "Розширення портів")" "DDOS" "$(trans "Налаштування безпеки")")
   local res
   res=$(display_menu "$(trans "Головне меню")" "${menu_items[@]}")

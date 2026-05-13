@@ -1,4 +1,4 @@
-﻿security_configuration() {
+security_configuration() {
   local menu_items=()
   local uufw=""
   local fail2ban=""

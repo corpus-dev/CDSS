@@ -93,16 +93,37 @@ update_cdss() {
   init_system=$(get_init_system)
 
   if [[ "$init_system" == "systemd" ]]; then
-    local SERVICES=('mhddos' 'distress')
-    local svc
-    for svc in "${SERVICES[@]}"; do
-      local service_file="${SCRIPT_DIR}/services/${svc}.service"
-      if [[ -f "$service_file" ]]; then
-        source "${SCRIPT_DIR}/utils/${svc}.sh"
-        regenerate_"${svc}"_service_file
-      fi
-    done
+    echo -e "${GREEN}$(trans "Перевірка systemd service-файлів")${NC}"
   fi
 
   echo -e "${GREEN}$(trans "CDSS успішно оновлено")${NC}"
+}
+
+reload_runtime_files() {
+  local runtime_files=(
+    "$SCRIPT_DIR/utils/definitions.sh"
+    "$SCRIPT_DIR/utils/dialog.sh"
+    "$SCRIPT_DIR/utils/datapatch.sh"
+    "$SCRIPT_DIR/utils/updater.sh"
+    "$SCRIPT_DIR/utils/scheduler.sh"
+    "$SCRIPT_DIR/utils/port-extending.sh"
+    "$SCRIPT_DIR/utils/fail2ban.sh"
+    "$SCRIPT_DIR/utils/ufw.sh"
+    "$SCRIPT_DIR/utils/mhddos.sh"
+    "$SCRIPT_DIR/utils/distress.sh"
+    "$SCRIPT_DIR/utils/x100.sh"
+    "$SCRIPT_DIR/menu/menu_init.sh"
+    "$SCRIPT_DIR/menu/ddos_tool_managment.sh"
+    "$SCRIPT_DIR/menu/ddoss.sh"
+    "$SCRIPT_DIR/menu/autoloading.sh"
+    "$SCRIPT_DIR/menu/security_configuration.sh"
+    "$SCRIPT_DIR/menu/security_settings.sh"
+    "$SCRIPT_DIR/menu/main_menu.sh"
+  )
+  local file
+  for file in "${runtime_files[@]}"; do
+    if [[ -f "$file" ]]; then
+      source "$file"
+    fi
+  done
 }

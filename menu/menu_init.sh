@@ -1,4 +1,4 @@
-﻿display_menu() {
+display_menu() {
   local title="$1"
   shift
   local options=("$@")
