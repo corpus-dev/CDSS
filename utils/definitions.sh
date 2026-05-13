@@ -572,17 +572,17 @@ service_stop() {
 
   if [[ "$init_system" == "systemd" ]]; then
     if command -v systemctl >/dev/null 2>&1; then
-      sudo_or_root systemctl stop "$service_name" >/dev/null 2>&1
+      sudo_or_root systemctl stop "$service_name"
       return $?
     fi
   elif [[ "$init_system" == "openrc" ]]; then
     if command -v rc-service >/dev/null 2>&1; then
-      sudo_or_root rc-service "$service_name" stop >/dev/null 2>&1
+      sudo_or_root rc-service "$service_name" stop
       return $?
     fi
   elif [[ "$init_system" == "runit" ]]; then
     if command -v sv >/dev/null 2>&1; then
-      sudo_or_root sv down "$service_name" >/dev/null 2>&1
+      sudo_or_root sv down "$service_name"
       return $?
     fi
   else

@@ -1,8 +1,16 @@
 set -uo pipefail
 
 x100_run() {
-  service_stop distress
-  service_stop mhddos
+  if service_stop distress; then
+    cdss_dialog "$(trans "DISTRESS зупинено")"
+  else
+    cdss_dialog "$(trans "Не вдалося зупинити DISTRESS")"
+  fi
+  if service_stop mhddos; then
+    cdss_dialog "$(trans "MHDDOS зупинено")"
+  else
+    cdss_dialog "$(trans "Не вдалося зупинити MHDDOS")"
+  fi
   service_start x100
 }
 

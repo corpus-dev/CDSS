@@ -43,14 +43,14 @@ display_menu() {
     if [[ $dialog_exit -ne 0 ]]; then
       log_cancel_event "CANCEL DETECTED" "dialog_exit=$dialog_exit exit"
       stty sane
-      reset
+      clear
       exit 0
     fi
 
     if [[ -z "$selection" ]]; then
       log_cancel_event "EMPTY SELECTION" "return empty"
       stty sane
-      reset
+      clear
       exit 0
     fi
 

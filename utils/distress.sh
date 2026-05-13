@@ -228,7 +228,7 @@ regenerate_distress_service_file() {
   local init_system
   init_system=$(get_init_system)
 
-  local start="ExecStart=${SCRIPT_DIR}/bin/distress"
+  local start="${SCRIPT_DIR}/bin/distress"
 
   local in_section=0
   declare -A data
@@ -339,8 +339,16 @@ regenerate_distress_service_file() {
 distress_run() {
   safe_remove_path "/tmp/distress" || true
 
-  service_stop mhddos
-  service_stop x100
+  if service_stop mhddos; then
+    cdss_dialog "$(trans "MHDDOS зупинено")"
+  else
+    cdss_dialog "$(trans "Не вдалося зупинити MHDDOS")"
+  fi
+  if service_stop x100; then
+    cdss_dialog "$(trans "X100 зупинено")"
+  else
+    cdss_dialog "$(trans "Не вдалося зупинити X100")"
+  fi
   service_start distress
 }
 

@@ -176,7 +176,7 @@ regenerate_mhddos_service_file() {
   local init_system
   init_system=$(get_init_system)
 
-  local start="ExecStart=${SCRIPT_DIR}/bin/mhddos_proxy_linux"
+  local start="${SCRIPT_DIR}/bin/mhddos_proxy_linux"
 
   local in_section=0
   while IFS= read -r line; do
@@ -230,8 +230,16 @@ regenerate_mhddos_service_file() {
 mhddos_run() {
   safe_remove_path "/tmp/_MEI*" || true
 
-  service_stop distress
-  service_stop x100
+  if service_stop distress; then
+    cdss_dialog "$(trans "DISTRESS зупинено")"
+  else
+    cdss_dialog "$(trans "Не вдалося зупинити DISTRESS")"
+  fi
+  if service_stop x100; then
+    cdss_dialog "$(trans "X100 зупинено")"
+  else
+    cdss_dialog "$(trans "Не вдалося зупинити X100")"
+  fi
   service_start mhddos
 }
 
