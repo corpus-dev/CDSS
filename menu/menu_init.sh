@@ -12,11 +12,17 @@ display_menu() {
       dialog_args+=("${options[index]}" "")
     done
     local selection
-    selection=$(dialog --ascii-lines --clear --stdout --cancel-label "$(trans "Вихід")" --title "$title" \
-      --menu "$(trans "Оберіть опцію:")" 0 0 0 "${dialog_args[@]}")
+    local tmp_output
+    tmp_output=$(mktemp)
 
-    if [[ -z "$selection" ]]; then
-      pkill -9 dialog 2>/dev/null || true
+    dialog --ascii-lines --clear --stdout --cancel-label "$(trans "Вихід")" --title "$title" \
+      --menu "$(trans "Оберіть опцію:")" 0 0 0 "${dialog_args[@]}" > "$tmp_output" 2>&1
+    local dialog_exit=$?
+
+    selection=$(cat "$tmp_output" 2>/dev/null || true)
+    rm -f "$tmp_output"
+
+    if [[ $dialog_exit -ne 0 || -z "$selection" ]]; then
       stty sane
       clear
       exit 0
