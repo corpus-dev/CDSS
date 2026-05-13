@@ -77,7 +77,7 @@ truncate_large_cdss_log() {
 
 
 
-if [ "$1" = "--auto-install" ]; then
+if [ "${1:-}" = "--auto-install" ]; then
   truncate_large_cdss_log
   check_updates
   reload_runtime_files
@@ -109,7 +109,7 @@ if [ "$1" = "--auto-install" ]; then
   fi
   extend_ports
   get_ddoss_status
-elif [ "$1" = "--restore" ]; then
+elif [ "${1:-}" = "--restore" ]; then
 
   is_not_arm_arch
   if [[ $? == 1 ]]; then
@@ -184,10 +184,10 @@ elif [ "$1" = "--restore" ]; then
   fi
 
   rm -f "$tmp_install" 2>/dev/null
-elif [ "$1" = "config" ]; then
+elif [ "${1:-}" = "config" ]; then
   clear
   cat "${SCRIPT_DIR}"/services/EnvironmentFile && echo ""
-elif [ "$1" = "--uninstall" ]; then
+elif [ "${1:-}" = "--uninstall" ]; then
   if ! assert_safe_script_dir "${SCRIPT_DIR}"; then
     echo -e "${RED}$(trans "SCRIPT_DIR не пройшов перевірку безпеки. Uninstall скасовано.")${NC}"
     exit 1
