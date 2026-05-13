@@ -29,9 +29,11 @@ security_configuration() {
   fi
 
   menu_items+=("$(trans "Налаштування фаєрвола")" "$(trans "Налаштування захисту від брутфорса")" "$(trans "Повернутись назад")")
-  res=$(display_menu "$(trans "Налаштування захисту")" "${menu_items[@]}")
 
   while true; do
+    display_menu "$(trans "Налаштування захисту")" "${menu_items[@]}"
+    res="$CDSS_SELECTION"
+
     case "$res" in
     "$(trans "Вимкнути фаервол")")
       disable_ufw
@@ -55,6 +57,5 @@ security_configuration() {
       return 0
       ;;
     esac
-    res=$(display_menu "$(trans "Налаштування захисту")" "${menu_items[@]}")
   done
 }

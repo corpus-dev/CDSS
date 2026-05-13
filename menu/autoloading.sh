@@ -1,13 +1,5 @@
 set -uo pipefail
 
-log_cancel_event() {
-  local event="$1"
-  local details="${2:-}"
-  local timestamp
-  timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-  echo "$timestamp [CDSS-CANCEL-DEBUG] $event $details" >> "/var/log/cdss_cancel_debug.log" 2>/dev/null || true
-}
-
 autoload_configuration() {
   local menu_items=()
   local mhddos_item_menu
@@ -76,9 +68,11 @@ autoload_configuration() {
   fi
 
   menu_items+=("$(trans "Повернутись назад")")
-  res=$(display_menu "$(trans "Налаштування автозапуску")" "${menu_items[@]}")
 
   while true; do
+    display_menu "$(trans "Налаштування автозапуску")" "${menu_items[@]}"
+    res="$CDSS_SELECTION"
+
     case "$res" in
     "$(trans "Керування розкладом MHDDOS")")
       mhddos_configure_scheduler
@@ -123,6 +117,5 @@ autoload_configuration() {
       return 0
       ;;
     esac
-    res=$(display_menu "$(trans "Налаштування автозапуску")" "${menu_items[@]}")
   done
 }

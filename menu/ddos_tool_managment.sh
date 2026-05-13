@@ -1,13 +1,5 @@
 set -uo pipefail
 
-log_cancel_event() {
-  local event="$1"
-  local details="${2:-}"
-  local timestamp
-  timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-  echo "$timestamp [CDSS-CANCEL-DEBUG] $event $details" >> "/var/log/cdss_cancel_debug.log" 2>/dev/null || true
-}
-
 show_log_tail() {
   local log_file="$1"
 
@@ -172,10 +164,11 @@ ddos_tool_managment() {
     menu_items+=("MHDDOS")
   fi
   menu_items+=("DISTRESS" "X100" "$(trans "Повернутись назад")")
-  local res
-  res=$(display_menu "$(trans "Управління ддос інструментами")" "${menu_items[@]}")
 
   while true; do
+    display_menu "$(trans "Управління ддос інструментами")" "${menu_items[@]}"
+    res="$CDSS_SELECTION"
+
     case "$res" in
     "$(trans "Статус атаки")")
       get_ddoss_status
@@ -199,6 +192,5 @@ ddos_tool_managment() {
       return 0
       ;;
     esac
-    res=$(display_menu "$(trans "Управління ддос інструментами")" "${menu_items[@]}")
   done
 }

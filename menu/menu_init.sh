@@ -55,7 +55,7 @@ display_menu() {
     fi
 
     log_cancel_event "VALID SELECTION" "selection='$selection'"
-    echo "$selection"
+    CDSS_SELECTION="$selection"
     return 0
   else
     local choice
@@ -75,15 +75,14 @@ display_menu() {
 
       if [[ "$choice" =~ ^[0-9]+$ ]]; then
         if [[ "$choice" -eq 0 ]]; then
-          log_cancel_event "TEXT MODE CHOICE 0" "return empty"
+          log_cancel_event "TEXT MODE CHOICE 0" "exit"
           clear
-          echo ""
-          return 1
+          exit 0
         fi
         idx=$((choice - 1))
         if [[ $idx -ge 0 && $idx -lt ${#options[@]} ]]; then
           log_cancel_event "TEXT MODE VALID CHOICE" "choice=$choice idx=$idx option='${options[$idx]}'"
-          echo "${options[$idx]}"
+          CDSS_SELECTION="${options[$idx]}"
           return 0
         fi
       fi
