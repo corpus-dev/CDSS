@@ -6,7 +6,6 @@ threads=8000
 proxies=
 ifaces=
 use-my-ip=0
-extra-key=
 source=cdss
 cron-to-run=
 cron-to-stop=

@@ -87,7 +87,7 @@ CDSS has four main sections:
 |---|---|---|
 | MHDDOS | `amd64`, `arm64`; does not support `386`, `arm32`, Void/runit | Downloads `mhddos_proxy_linux`, generates `mhddos.service`, manages start/stop/status, autostart, and cron schedules. |
 | DISTRESS | `amd64`, `arm64`, `arm32`; systemd/openrc; does not support `386` or runit | Downloads `distress`, generates `distress.service`, manages start/stop/status, autostart, and cron schedules. |
-| X100 | Docker + systemd + `amd64`/`arm64` | Installs/checks Docker, downloads `x100-for-docker.tar.gz`, configures `x100-config.txt`, creates `x100.service`, manages start/stop/status, autostart, and cron schedules. |
+| X100 | Docker + systemd + `amd64`/`arm64` | Installs/checks Docker, downloads `x100-for-docker.zip`, configures `x100-config.txt`, creates `x100.service`, manages start/stop/status, autostart, and cron schedules. |
 
 When one tool is started, CDSS stops the other active tools so multiple services are not running at the same time.
 
@@ -101,7 +101,7 @@ Main configuration file:
 
 It contains these sections:
 
-- `[mhddos]` - `user-id`, `lang`, `copies`, `threads`, `proxies`, `ifaces`, `use-my-ip`, `extra-key`, `source`, `cron-to-run`, `cron-to-stop`.
+- `[mhddos]` - `user-id`, `lang`, `copies`, `threads`, `proxies`, `ifaces`, `use-my-ip`, `source`, `cron-to-run`, `cron-to-stop`.
 - `[distress]` - `user-id`, `use-my-ip`, `use-tor`, `concurrency`, `interface`, flood-related options, `proxies-path`, `source`, `cron-to-run`, `cron-to-stop`.
 - `[x100]` - `itArmyUserId`, `initialDistressScale`, `ignoreBundledFreeVpn`, `cron-to-run`, `cron-to-stop`.
 
@@ -112,14 +112,12 @@ The settings menu updates this file and regenerates the related service-file `Ex
 CDSS supports:
 
 - systemd/openrc autostart for `mhddos`, `distress`, and `x100` when the platform supports it;
-- root/system cron-based start and stop schedules for each tool;
+- cron-based start and stop schedules for each tool;
 - cron markers in the `# CDSS:<job_id>` format.
 
 Void Linux with runit is partially supported: service enable/disable is not available and some flows need manual checks.
 
 ## System Security
-
-Systemd services run as the dedicated `cdss` system user with `NoNewPrivileges=true`, `ProtectSystem=strict`, and explicit writable paths for logs, temporary files, and the X100 runtime directory.
 
 The security section installs and configures:
 

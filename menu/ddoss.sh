@@ -14,6 +14,11 @@ update_env_user_id() {
     return 1
   fi
 
+  if [[ ! -w "$environment_file" ]]; then
+    cdss_dialog "$(trans "Файл EnvironmentFile недоступний для запису: $environment_file")"
+    return 1
+  fi
+
   if [[ -z "$new_user_id" ]]; then
     return 0
   fi
@@ -23,13 +28,26 @@ update_env_user_id() {
     return 1
   fi
 
-  if set_config_value "$environment_file" "mhddos" "user-id" "$new_user_id" &&
-     set_config_value "$environment_file" "distress" "user-id" "$new_user_id"; then
-    cdss_dialog "$(trans "Юзер ІД оновлено успішно")"
-    return 0
+  if grep -q '^user-id=' "$environment_file" 2>/dev/null; then
+    local tmpfile
+    tmpfile=$(mktemp)
+    sed 's/^user-id=.*/user-id='"$new_user_id"'/' "$environment_file" > "$tmpfile"
+    if mv "$tmpfile" "$environment_file"; then
+      cdss_dialog "$(trans "Юзер ІД оновлено успішно")"
+      return 0
+    else
+      rm -f "$tmpfile"
+      cdss_dialog "$(trans "Помилка запису: не вдалося оновити файл")"
+      return 1
+    fi
   else
-    cdss_dialog "$(trans "Помилка запису: не вдалося оновити файл")"
-    return 1
+    if echo "user-id=$new_user_id" >> "$environment_file"; then
+      cdss_dialog "$(trans "Юзер ІД додано в кінець файлу")"
+      return 0
+    else
+      cdss_dialog "$(trans "Помилка запису: не вдалося додати файл")"
+      return 1
+    fi
   fi
 }
 
@@ -58,7 +76,8 @@ ddos() {
         cdss_dialog "$(trans "SCRIPT_DIR не визначено, пропуск оновлення user_id")"
       fi
 
-      if is_not_arm_arch; then
+      is_not_arm_arch
+      if [[ $? == 1 ]]; then
         install_mhddos
       fi
 

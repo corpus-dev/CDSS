@@ -87,7 +87,7 @@ CDSS має чотири основні розділи:
 |---|---|---|
 | MHDDOS | `amd64`, `arm64`; не підтримує `386`, `arm32`, Void/runit | Завантажує `mhddos_proxy_linux`, генерує `mhddos.service`, керує запуском, статусом, автозапуском і cron-розкладом. |
 | DISTRESS | `amd64`, `arm64`, `arm32`; systemd/openrc; не підтримує `386` і runit | Завантажує `distress`, генерує `distress.service`, керує запуском, статусом, автозапуском і cron-розкладом. |
-| X100 | Docker + systemd + `amd64`/`arm64` | Встановлює/перевіряє Docker, завантажує `x100-for-docker.tar.gz`, налаштовує `x100-config.txt`, створює `x100.service`, керує запуском, статусом, автозапуском і cron-розкладом. |
+| X100 | Docker + systemd + `amd64`/`arm64` | Встановлює/перевіряє Docker, завантажує `x100-for-docker.zip`, налаштовує `x100-config.txt`, створює `x100.service`, керує запуском, статусом, автозапуском і cron-розкладом. |
 
 Під час запуску одного інструмента CDSS зупиняє інші активні інструменти, щоб одночасно не працювали кілька служб.
 
@@ -101,7 +101,7 @@ CDSS має чотири основні розділи:
 
 У ньому є секції:
 
-- `[mhddos]` - `user-id`, `lang`, `copies`, `threads`, `proxies`, `ifaces`, `use-my-ip`, `extra-key`, `source`, `cron-to-run`, `cron-to-stop`.
+- `[mhddos]` - `user-id`, `lang`, `copies`, `threads`, `proxies`, `ifaces`, `use-my-ip`, `source`, `cron-to-run`, `cron-to-stop`.
 - `[distress]` - `user-id`, `use-my-ip`, `use-tor`, `concurrency`, `interface`, flood-параметри, `proxies-path`, `source`, `cron-to-run`, `cron-to-stop`.
 - `[x100]` - `itArmyUserId`, `initialDistressScale`, `ignoreBundledFreeVpn`, `cron-to-run`, `cron-to-stop`.
 
@@ -112,14 +112,12 @@ CDSS має чотири основні розділи:
 CDSS підтримує:
 
 - systemd/openrc автозапуск для `mhddos`, `distress`, `x100`, якщо платформа підтримується;
-- root/system cron-розклад запуску та зупинки для кожного інструмента;
+- cron-розклад запуску та зупинки для кожного інструмента;
 - службові cron-маркери формату `# CDSS:<job_id>`.
 
 На Void Linux з runit підтримка часткова: enable/disable для сервісів недоступні, частина сценаріїв потребує ручної перевірки.
 
 ## Безпека Системи
-
-Systemd-сервіси запускаються від системного користувача `cdss` з `NoNewPrivileges=true`, `ProtectSystem=strict` та явно дозволеними writable-шляхами для логів, тимчасових файлів і X100 runtime-директорії.
 
 Розділ безпеки встановлює та налаштовує:
 

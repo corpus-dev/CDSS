@@ -11,7 +11,8 @@ RED='\033[0;31m'
 NC='\033[0m'
 ORANGE='\033[0;33m'
 
-source "$SCRIPT_DIR/utils/privileges.sh"
+trans() { echo "$@"; }
+
 source "$SCRIPT_DIR/utils/platform_matrix.sh"
 
 if [[ -f "$SCRIPT_DIR/utils/translate.sh" ]]; then
@@ -20,12 +21,13 @@ else
   trans() { echo "$@"; }
 fi
 
+require_privileges
+
 localization_file=$(apply_localization "$@")
 if [[ -n "$localization_file" ]]; then
   source "$localization_file"
 fi
 
-require_privileges
 
 export TOOL_DIR="$SCRIPT_DIR/bin"
 
@@ -65,13 +67,11 @@ reload_runtime_files
 
 truncate_large_cdss_log() {
   local log_file="/var/log/cdss.log"
-  local log_size
-  log_size=$(wc -c < "$log_file" 2>/dev/null || echo 0)
-  if [[ -f "$log_file" ]] && [[ "$log_size" -gt 314572800 ]]; then
+  if [[ -f "$log_file" ]] && [[ "$(stat -c%s "$log_file" 2>/dev/null || echo 0)" -gt 314572800 ]]; then
     local archive_file="/var/log/cdss.log.archive.$(date +%s)"
-    sudo_or_root cp "$log_file" "$archive_file" 2>/dev/null || true
-    sudo_or_root chmod 600 "$archive_file" 2>/dev/null || true
-    sudo_or_root truncate -s 0 "$log_file"
+    cp "$log_file" "$archive_file" 2>/dev/null || true
+    chmod 600 "$archive_file" 2>/dev/null || true
+    truncate -s 0 "$log_file"
   fi
 }
 
@@ -101,8 +101,8 @@ if [ "${1:-}" = "--auto-install" ]; then
   install_ufw
   install_distress
 
-  if is_not_arm_arch; then
-    install_mhddos
+  is_not_arm_arch
+  if [[ $? == 1 ]]; then
     confirm_dialog "$(trans "MHDDOS встановлено. Активувати атаку?")"
     mhddos_run
     mhddos_auto_enable
@@ -111,10 +111,11 @@ if [ "${1:-}" = "--auto-install" ]; then
   get_ddoss_status
 elif [ "${1:-}" = "--restore" ]; then
 
-  if is_not_arm_arch; then
-    mhddos_stop
-    mhddos_auto_disable >/dev/null 2>&1
-    safe_remove_path "/tmp/_MEI*" || true
+  is_not_arm_arch
+  if [[ $? == 1 ]]; then
+  mhddos_stop
+  mhddos_auto_disable >/dev/null 2>&1
+  safe_remove_path "/tmp/_MEI*" || true
   fi
 
   distress_stop
@@ -129,8 +130,7 @@ elif [ "${1:-}" = "--restore" ]; then
 
   backup_file=$(mktemp)
   if [[ -f "${SCRIPT_DIR}/services/EnvironmentFile" ]]; then
-    sudo_or_root cp "${SCRIPT_DIR}/services/EnvironmentFile" "$backup_file"
-    sudo_or_root chown "$(get_real_user)" "$backup_file" 2>/dev/null || true
+    cp "${SCRIPT_DIR}/services/EnvironmentFile" "$backup_file"
     echo -e "${GREEN}$(trans "Backup EnvironmentFile створено.")${NC}"
   fi
 
@@ -149,14 +149,9 @@ elif [ "${1:-}" = "--restore" ]; then
     exit 1
   fi
 
+  local install_checksum
   install_checksum=$(sha256sum "$tmp_install" | cut -d' ' -f1)
-  echo "$(date '+%Y-%m-%d %H:%M:%S') [CDSS] install.sh checksum: $install_checksum" | sudo_or_root tee -a /var/log/cdss.log >/dev/null 2>&1 || true
-
-  if ! safe_remove_cdss_dir "${SCRIPT_DIR}"; then
-    echo -e "${RED}$(trans "Не вдалося безпечно видалити стару інсталяцію. Restore скасовано.")${NC}"
-    rm -f "$tmp_install" "$backup_file" 2>/dev/null
-    exit 1
-  fi
+  echo "$(date '+%Y-%m-%d %H:%M:%S') [CDSS] install.sh checksum: $install_checksum" >> /var/log/cdss.log 2>/dev/null || true
 
   bash "$tmp_install"
   install_exit=$?
@@ -167,15 +162,21 @@ elif [ "${1:-}" = "--restore" ]; then
     exit 1
   fi
 
+  if ! safe_remove_cdss_dir "${SCRIPT_DIR}"; then
+    echo -e "${RED}$(trans "Не вдалося безпечно видалити стару інсталяцію. Restore скасовано.")${NC}"
+    rm -f "$backup_file" 2>/dev/null
+    exit 1
+  fi
+
   if [[ -f "$backup_file" ]]; then
     new_script_dir="$INSTALL_DIR"
     if [[ -d "$new_script_dir" ]]; then
       if [[ -f "${new_script_dir}/services/EnvironmentFile" ]]; then
-        sudo_or_root cp "$backup_file" "${new_script_dir}/services/EnvironmentFile"
+        cp "$backup_file" "${new_script_dir}/services/EnvironmentFile"
         echo -e "${GREEN}$(trans "Backup відновлено у новій інсталяції.")${NC}"
       else
-        sudo_or_root mkdir -p "${new_script_dir}/services"
-        sudo_or_root cp "$backup_file" "${new_script_dir}/services/EnvironmentFile"
+        mkdir -p "${new_script_dir}/services"
+        cp "$backup_file" "${new_script_dir}/services/EnvironmentFile"
         echo -e "${GREEN}$(trans "Backup відновлено у новій інсталяції.")${NC}"
       fi
     fi
@@ -194,8 +195,7 @@ elif [ "${1:-}" = "--uninstall" ]; then
 
   backup_file=$(mktemp)
   if [[ -f "${SCRIPT_DIR}/services/EnvironmentFile" ]]; then
-    sudo_or_root cp "${SCRIPT_DIR}/services/EnvironmentFile" "$backup_file"
-    sudo_or_root chown "$(get_real_user)" "$backup_file" 2>/dev/null || true
+    cp "${SCRIPT_DIR}/services/EnvironmentFile" "$backup_file"
     echo -e "${GREEN}$(trans "Backup EnvironmentFile створено перед видаленням.")${NC}"
   fi
 

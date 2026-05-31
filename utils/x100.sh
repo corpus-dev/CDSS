@@ -76,7 +76,7 @@ x100_get_status() {
 }
 
 docker_installed() {
-   docker container ls >/dev/null 2>&1
+   docker container ls   1>/dev/null   2>/dev/null  && return 0 || return 1
 }
 
 add_user_to_docker_group() {
@@ -84,14 +84,12 @@ add_user_to_docker_group() {
     sudo_or_root groupadd docker
   fi
 
-  local real_user
-  real_user=$(get_real_user)
-
-  if ! id -nG "$real_user" | grep -qw "docker"; then
-      sudo_or_root usermod -aG docker "$real_user"
+  if ! id -nG "$USER" | grep -qw "docker"; then
+      sudo_or_root usermod -aG docker $USER
       clear
       echo -e "\n"
-      echo -e "${ORANGE}Docker-групу оновлено. Перезапустіть сесію користувача '${real_user}' і запустіть ${NC}${GREEN}\e[4mcdss\e[0m${NC}${ORANGE} знову.${NC}"
+      echo -e "${ORANGE}Перезапустили "docker" конфігурацію, будь ласка, запустіть ${NC}""${GREEN}\e[4mcdss\e[0m${NC}""${ORANGE} команду знову і вдалого вам ддосу :).${NC}"
+      newgrp docker
   fi
 }
 
@@ -195,7 +193,7 @@ initiate_x100() {
 
 configure_x100() {
     clear
-    echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}\n"
+    echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}"\\n"
     echo -ne "\n"
     local user_id
     read -e -p "$(trans "Юзер ІД: ")" -i "$(get_x100_variable "itArmyUserId")"  user_id
@@ -251,7 +249,9 @@ get_x100_variable() {
 }
 
 get_x100_cdss_variable() {
-  get_config_value "${SCRIPT_DIR}/services/EnvironmentFile" "x100" "$1"
+  local lines=$(sed -n "/\[x100\]/,/\[\/x100\]/p" "${SCRIPT_DIR}"/services/EnvironmentFile)
+  local variable=$(echo "$lines" | grep "$1=" | cut -d "=" -f2)
+  echo "$variable"
 }
 
 write_x100_cdss_variable() {
@@ -286,7 +286,7 @@ install_x100() {
     fi
 
     if ! service_is_active docker; then
-      cdss_dialog "$(trans "Docker не запущено. Запустіть sudo systemctl start docker або sudo service docker start.")${NC}"
+      cdss_dialog "$(trans "Docker не запущено. Запустіть "sudo systemctl start docker" або "sudo service docker start"")${NC}"
       return 1
     fi
 
@@ -295,36 +295,24 @@ install_x100() {
 
     cd "$SCRIPT_DIR" || return 1
 
-    if ! command -v tar >/dev/null 2>&1; then
-      cdss_dialog "$(trans "tar не встановлено. Встановіть tar і повторіть спробу.")"
+    if ! curl -L --fail --show-error --connect-timeout 10 --max-time 30 "https://github.com/corpus-dev/x100-for-docker/raw/main/docker/x100-for-docker.zip" -o "./x100-for-docker.zip"; then
+      cdss_dialog "$(trans "Помилка завантаження x100-for-docker.zip")"
       return 1
     fi
 
-    local archive="./x100-for-docker.tar.gz"
-    if ! curl -L --fail --show-error --connect-timeout 10 --max-time 30 "https://github.com/corpus-dev/x100_releases/raw/refs/heads/main/docker/x100-for-docker.tar.gz" -o "$archive"; then
-      cdss_dialog "$(trans "Помилка завантаження x100-for-docker.tar.gz")"
+    if [[ ! -s "./x100-for-docker.zip" ]]; then
+      cdss_dialog "$(trans "Завантажений файл x100-for-docker.zip порожній")"
+      rm -f "./x100-for-docker.zip"
       return 1
     fi
 
-    if [[ ! -s "$archive" ]]; then
-      cdss_dialog "$(trans "Завантажений файл x100-for-docker.tar.gz порожній")"
-      rm -f "$archive"
+    if ! unzip -o ./x100-for-docker.zip; then
+      cdss_dialog "$(trans "unzip x100-for-docker.zip завершився з помилкою")"
+      rm -f "./x100-for-docker.zip"
       return 1
     fi
 
-    if ! tar tzf "$archive" >/dev/null 2>&1; then
-      cdss_dialog "$(trans "x100-for-docker.tar.gz не пройшов перевірку цілісності")"
-      rm -f "$archive"
-      return 1
-    fi
-
-    if ! tar xzf "$archive"; then
-      cdss_dialog "$(trans "tar xzf x100-for-docker.tar.gz завершився з помилкою")"
-      rm -f "$archive"
-      return 1
-    fi
-
-    rm -f "$archive"
+    rm ./x100-for-docker.zip
 
     if [[ ! -d "$SCRIPT_DIR/x100-for-docker" ]]; then
       cdss_dialog "$(trans "Директорія x100-for-docker не знайдена після unzip")"
@@ -343,12 +331,12 @@ install_x100() {
       return 1
     fi
 
-    if ! sudo_or_root chmod -R ug+x "./for-macOS-and-Linux-hosts"; then
+    if ! chmod -R ug+x "./for-macOS-and-Linux-hosts"; then
       cdss_dialog "$(trans "Не вдалося встановити права для for-macOS-and-Linux-hosts")"
       return 1
     fi
 
-    echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}\n"
+    echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}"\\n"
     echo -ne "\n"
     read -e -p "$(trans "Юзер ІД: ")"  user_id
 
@@ -391,27 +379,25 @@ install_x100() {
       return 1
     }
 
-    if ! sudo_or_root chmod ug+x "./put-your-ovpn-files-here/FreeAndSlowVpn/generate-vpngate.bash"; then
+    if ! chmod ug+x "./put-your-ovpn-files-here/FreeAndSlowVpn/generate-vpngate.bash"; then
       cdss_dialog "$(trans "Не вдалося встановити права для generate-vpngate.bash")"
       return 1
     fi
-
-    sudo_or_root chown -R cdss:cdss "$SCRIPT_DIR/x100-for-docker" 2>/dev/null || true
 
     if ! create_symlink; then
       cdss_dialog "$(trans "Не вдалося створити symlink")"
       return 1
     fi
-     echo -ne "${GREEN}$(trans "This installation of X100 uses free and slow VPNGate VPN provider.")${NC}\n"
-     echo -ne "${GREEN}${ORANGE}http://www.vpngate.net${NC}\n"
-     echo -ne "${GREEN}$(trans "You will need a commercial VPN account to achieve top attack speed (1 Gbit/s or more).")${NC}\n"
-     echo -ne "${GREEN}$(trans "(Use this link to get full-featured VPN for free https://www.vpnunlimited.com/ua/palianytsia)")${NC}\n"
-     echo -ne "${GREEN}$(trans "Also, be aware, that X100 gradually increases resources usage.")${NC}\n"
-     echo -ne "${GREEN}$(trans "X100 will reach peak performance approximately in 3 hours after launch.")${NC}\n"
-     echo -ne "${GREEN}$(trans "Logs will be stored in ${ORANGE}$SCRIPT_DIR/x100-for-docker/put-your-ovpn-files-here${NC} ${GREEN}folder.${NC}")${NC}\n"
-     echo -ne "${GREEN}$(trans "For more information contact us on Telegram ${ORANGE}https://t.me/it_army_ua${NC}")${NC}\n"
-     echo -ne "${GREEN}$(trans "Also, there are some manuals and docs on our official website ${ORANGE}https://x100.vn.ua/${NC}")${NC}\n"
-     echo -ne "${GREEN}$(trans "Best regards! X100 IT ARMY TEAM! Glory to UKRAINE!")${NC}\n"
+     echo -ne "${GREEN}$(trans "This installation of X100 uses free and slow "VPNGate" VPN provider.")${NC}"\\n"
+     echo -ne "${GREEN}$(trans "${ORANGE}http://www.vpngate.net${NC}")${NC}"\\n"
+     echo -ne "${GREEN}$(trans "You will need a commercial VPN account to achieve top attack speed (1 Gbit/s or more).")${NC}"\\n"
+     echo -ne "${GREEN}$(trans "(Use this link to get full-featured VPN for free https://www.vpnunlimited.com/ua/palianytsia)")${NC}"\\n"
+     echo -ne "${GREEN}$(trans "Also, be aware, that X100 gradually increases resources usage.")${NC}"\\n"
+     echo -ne "${GREEN}$(trans "X100 will reach pick performance approximately in 3 hours after launch.")${NC}"\\n"
+     echo -ne "${GREEN}$(trans "Logs will be stored in ${ORANGE}$SCRIPT_DIR/x100-for-docker/put-your-ovpn-files-here${NC} ${GREEN}folder.${NC}")${NC}"\\n"
+      echo -ne "${GREEN}$(trans "For more information contact us on Telegram ${ORANGE}https://t.me/it_army_ua${NC}")${NC}"\n"
+     echo -ne "${GREEN}$(trans "Also, there are some manuals and docs on our official website ${ORANGE}https://x100.vn.ua/${NC}")${NC}"\\n"
+     echo -ne "${GREEN}$(trans "Best regards! X100 IT ARMY TEAM! Glory to UKRAINE!")${NC}"\\n"
 
     echo -e "${ORANGE}$(trans "Нажміть будь яку клавішу щоб продовжити")${NC}"
     read -s -n 1 key
@@ -502,7 +488,7 @@ run_x100_on_schedule() {
   fi
   create_symlink
 
-  sudo_or_root chmod +x "$SCRIPT_DIR/utils/x100.sh"
+  chmod +x "$SCRIPT_DIR/utils/x100.sh"
   local cron_time_to_run=$(get_x100_cdss_variable "cron-to-run")
   local cron_time_to_stop=$(get_x100_cdss_variable "cron-to-stop")
   cron_remove_job "mhddos_run" || true
@@ -520,30 +506,6 @@ run_x100_on_schedule() {
   fi
 }
 
-regenerate_x100_service_file() {
-  local service_file="${SCRIPT_DIR}/services/x100.service"
-  local run_path="${SCRIPT_DIR}/x100-for-docker/for-macOS-and-Linux-hosts/run-and-auto-update.bash"
-  local stop_path="${SCRIPT_DIR}/x100-for-docker/for-macOS-and-Linux-hosts/stop.bash"
-  local work_dir="${SCRIPT_DIR}/x100-for-docker/for-macOS-and-Linux-hosts/"
-  local log_file="${SCRIPT_DIR}/x100-for-docker/put-your-ovpn-files-here/x100-log-short.txt"
-  local tmp_svc
-  tmp_svc=$(mktemp)
-
-  while IFS= read -r line; do
-    case "$line" in
-      ExecStart=*) echo "ExecStart=$run_path" >> "$tmp_svc" ;;
-      ExecStop=*) echo "ExecStop=$stop_path" >> "$tmp_svc" ;;
-      WorkingDirectory=*) echo "WorkingDirectory=$work_dir" >> "$tmp_svc" ;;
-      ReadWritePaths=*) echo "ReadWritePaths=${SCRIPT_DIR}/x100-for-docker /var/log /tmp" >> "$tmp_svc" ;;
-      StandardOutput=*) echo "StandardOutput=append:$log_file" >> "$tmp_svc" ;;
-      StandardError=*) echo "StandardError=append:$log_file" >> "$tmp_svc" ;;
-      *) echo "$line" >> "$tmp_svc" ;;
-    esac
-  done < "$service_file"
-
-  sudo_or_root mv -f "$tmp_svc" "$service_file"
-}
-
 check_if_x100_running_on_schedule() {
   local crontab_content
   crontab_content=$(sudo_or_root crontab -l 2>/dev/null || true)
@@ -554,3 +516,5 @@ check_if_x100_running_on_schedule() {
   fi
   return 1
 }
+
+

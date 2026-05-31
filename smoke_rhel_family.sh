@@ -11,15 +11,6 @@ NC='\033[0m'
 RESULT_FILE="smoke_results/rhel_family.result"
 mkdir -p "$(dirname "$RESULT_FILE")"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-source "$SCRIPT_DIR/utils/privileges.sh"
-source "$SCRIPT_DIR/utils/platform_matrix.sh"
-source "$SCRIPT_DIR/utils/definitions.sh"
-
-sudo_or_root() {
-  "$@"
-}
-
 echo "=== Smoke Test: RHEL Family ==="
 echo ""
 
@@ -32,7 +23,6 @@ SUPPORT=$(get_platform_support_level 2>/dev/null || echo "unknown")
 CRON_PKG=$(get_cron_package_name 2>/dev/null || echo "unknown")
 CRON_SVC=$(get_cron_service_name 2>/dev/null || echo "unknown")
 FIREWALL=$(get_firewall_backend 2>/dev/null || echo "unknown")
-export DISTRO FAMILY INIT ARCH PKG SUPPORT CRON_PKG CRON_SVC FIREWALL
 
 PASS=0
 FAIL=0
@@ -42,10 +32,10 @@ check() {
   shift
   if "$@"; then
     echo -e "${GREEN}✓${NC} $desc"
-    ((PASS+=1))
+    ((PASS++))
   else
     echo -e "${RED}✗${NC} $desc"
-    ((FAIL+=1))
+    ((FAIL++))
   fi
 }
 
@@ -77,20 +67,20 @@ MHDDOS_ARCH=$(get_normalized_arch)
 MHDDOS_INIT=$(get_init_system)
 if tool_supports_platform "mhddos" "rhel" "$MHDDOS_ARCH" "$MHDDOS_INIT"; then
   echo -e "${GREEN}✓${NC} MHDDOS supported on this platform"
-  ((PASS+=1))
+  ((PASS++))
 else
   echo -e "${RED}✗${NC} MHDDOS NOT supported on this platform"
-  ((FAIL+=1))
+  ((FAIL++))
 fi
 
 DISTRESS_ARCH=$(get_normalized_arch)
 DISTRESS_INIT=$(get_init_system)
 if tool_supports_platform "distress" "rhel" "$DISTRESS_ARCH" "$DISTRESS_INIT"; then
   echo -e "${GREEN}✓${NC} DISTRESS supported on this platform"
-  ((PASS+=1))
+  ((PASS++))
 else
   echo -e "${RED}✗${NC} DISTRESS NOT supported on this platform"
-  ((FAIL+=1))
+  ((FAIL++))
 fi
 
 echo ""

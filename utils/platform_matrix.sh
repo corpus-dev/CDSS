@@ -3,14 +3,6 @@ set -uo pipefail
 # platform_matrix.sh — центральне джерело правди про підтримку платформ
 # Цей файл містить всі mapping-и для distro, arch, init, package, cron, firewall.
 
-if ! command -v sudo_or_root >/dev/null 2>&1; then
-  platform_matrix_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd -P)"
-  if [[ -f "$platform_matrix_dir/privileges.sh" ]]; then
-    source "$platform_matrix_dir/privileges.sh"
-  fi
-  unset platform_matrix_dir
-fi
-
 # ============================================================
 # Distro detection (розширена, з ID_LIKE та family)
 # ============================================================
@@ -500,15 +492,12 @@ configure_firewall_backend() {
     ufw)
       sudo_or_root ufw default deny incoming
       sudo_or_root ufw default allow outgoing
-      sudo_or_root ufw allow 22
-      sudo_or_root ufw --force enable
+      sudo_or_root ufw enable
       ;;
     firewalld)
       service_enable firewalld
       service_start firewalld
       sudo_or_root firewall-cmd --permanent --set-default-zone=dmz
-      sudo_or_root firewall-cmd --permanent --zone=dmz --add-service=ssh
-      sudo_or_root firewall-cmd --reload
       ;;
     *)
       return 1
@@ -632,4 +621,42 @@ get_partial_support_distributions() {
 
 get_unsupported_distributions() {
   echo "gentoo"
+}
+
+# ============================================================
+# Privilege helper — canonical privilege API
+# ============================================================
+
+trans() { echo "$@"; }
+
+is_root() {
+  [[ "$(id -u)" -eq 0 ]]
+}
+
+has_sudo() {
+  command -v sudo >/dev/null 2>&1
+}
+
+require_privileges() {
+  if is_root; then
+    return 0
+  fi
+
+  if has_sudo; then
+    return 0
+  fi
+
+  echo -e "${RED}$(trans "Потрібен sudo або root доступ. CDSS не працюватиме без прав.")${NC}"
+  echo -e "${RED}$(trans "Запустіть як root або додайте sudo доступ.")${NC}"
+  exit 1
+}
+
+sudo_or_root() {
+  if is_root; then
+    logger "CDSS: root command: $*" 2>/dev/null || true
+    "$@"
+  else
+    logger "CDSS: sudo command: $*" 2>/dev/null || true
+    sudo "$@"
+  fi
 }

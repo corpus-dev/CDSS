@@ -65,9 +65,6 @@ source_cdss_file() {
   return 1
 }
 
-export SCRIPT_DIR="$INSTALL_SOURCE_DIR"
-
-source_cdss_file "utils/privileges.sh"
 source_cdss_file "utils/platform_matrix.sh"
 
 if ! source_cdss_file "utils/translate.sh" optional; then
@@ -79,13 +76,13 @@ install_cdss_command() {
   sudo_or_root ln -sf "$WORKING_DIR/bin/cdss" /usr/local/bin/cdss
 }
 
+require_privileges
+
 dist_id=$(get_distribution_id)
 dist_family=$(get_distribution_family)
 init_system=$(get_init_system)
 arch=$(get_normalized_arch)
 support_level=$(get_platform_support_level)
-
-require_privileges
 
 if [[ "$support_level" == "unsupported" ]]; then
   echo -e "${RED}$(trans "Дистрибутив '$dist_id' не підтримується. Встановлення призупинено.")${NC}"
@@ -99,8 +96,6 @@ if [[ "$support_level" == "partial" ]]; then
   echo -e "${ORANGE}$(trans "Натисніть Enter для продовження або Ctrl+C для виходу.")${NC}"
   read -n 1 -s || exit 1
 fi
-
-ensure_cdss_service_user
 
 pkg_manager=$(get_package_manager)
 if [[ "$pkg_manager" == "unknown" ]]; then
@@ -119,10 +114,7 @@ fi
 ensure_cron_installed || true
 ensure_cron_running || true
 
-if ! sudo_or_root "$pkg_manager" update -y; then
-  echo -e "${RED}$(trans "Оновлення індексу пакетів не вдалося. Встановлення зупинено.")${NC}"
-  exit 1
-fi
+sudo_or_root "$pkg_manager" update -y
 for pkg in $base_packages; do
   echo -e "${GREEN}$(trans "Встановлюємо $pkg")${NC}"
   case "$pkg_manager" in
@@ -157,16 +149,10 @@ if [[ -d "$WORKING_DIR" ]] && [[ "$(ls -A "$WORKING_DIR")" ]]; then
   install_cdss_command
 else
   sudo_or_root mkdir -p "$WORKING_DIR"
-  sudo_or_root chown "$(get_real_user)" "$WORKING_DIR"
+  sudo_or_root chown "$(whoami)" "$WORKING_DIR"
   echo -e "${GREEN}$(trans "Клонуємо CDSS...")${NC}"
-  if ! git clone https://github.com/corpus-dev/CDSS.git "$WORKING_DIR"; then
-    echo -e "${RED}$(trans "git clone CDSS не вдався.")${NC}"
-    exit 1
-  fi
-  if ! cd "$WORKING_DIR" || ! git checkout main; then
-    echo -e "${RED}$(trans "git checkout main не вдався.")${NC}"
-    exit 1
-  fi
+  git clone https://github.com/corpus-dev/CDSS.git "$WORKING_DIR"
+  cd "$WORKING_DIR" && git checkout main
 
   source "$WORKING_DIR/utils/definitions.sh"
   source "$WORKING_DIR/utils/datapatch.sh"
