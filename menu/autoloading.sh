@@ -14,8 +14,7 @@ autoload_configuration() {
   local res
 
   if mhddos_installed ; then
-    is_not_arm_arch
-    if [[ $? == 1 ]]; then
+    if is_not_arm_arch; then
       if mhddos_enabled; then
         mhddos_item_menu="$(trans "Вимкнути автозапуск MHDDOS")"
       else

@@ -1,0 +1,12 @@
+distro=ubuntu
+family=debian
+init=systemd
+arch=amd64
+pkg=apt-get
+support=full
+cron_pkg=cron
+cron_svc=cron
+firewall=ufw
+pass=13
+fail=0
+date=2026-05-31T09:33:04Z

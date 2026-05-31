@@ -1,67 +1,5 @@
 set -uo pipefail
 
-get_distribution() {
-  local lsb_dist=""
-
-  if [ -r /etc/os-release ]; then
-    lsb_dist="$(. /etc/os-release && echo "$ID")"
-    lsb_dist=$(echo "$lsb_dist" | tr '[:upper:]' '[:lower:]')
-  fi
-
-  echo "$lsb_dist"
-}
-
-get_package_manager() {
-  local dist
-  dist=$(get_distribution)
-
-  case "$dist" in
-    debian|ubuntu)
-      echo "apt-get"
-      ;;
-    fedora|rocky|almalinux|ol)
-      echo "dnf"
-      ;;
-    centos)
-      echo "yum"
-      ;;
-    arch|manjaro)
-      echo "pacman"
-      ;;
-    void)
-      echo "xbps-install"
-      ;;
-    gentoo)
-      echo "emerge"
-      ;;
-    *)
-      echo "apt-get"
-      ;;
-  esac
-}
-
-get_init_system() {
-  if command -v systemctl >/dev/null 2>&1; then
-    if systemctl is-system-running >/dev/null 2>&1 || systemctl list-units --type=service >/dev/null 2>&1; then
-      echo "systemd"
-      return 0
-    fi
-  fi
-
-  if command -v rc-service >/dev/null 2>&1; then
-    echo "openrc"
-    return 0
-  fi
-
-  if command -v sv >/dev/null 2>&1; then
-    echo "runit"
-    return 0
-  fi
-
-  echo "unknown"
-  return 1
-}
-
 get_service_command() {
   local init_system
   init_system=$(get_init_system)
@@ -272,7 +210,7 @@ safe_remove_path() {
       ;;
     /tmp/distress)
       if [[ -d "$target_path" ]] || [[ -f "$target_path" ]]; then
-        rm -rf "$target_path" 2>/dev/null
+        sudo_or_root rm -rf "$target_path" 2>/dev/null
         return 0
       fi
       return 1
@@ -290,7 +228,7 @@ safe_remove_tmp_mei_dirs() {
   for mei_dir in /tmp/_MEI*; do
     if [[ -d "$mei_dir" ]] && [[ "$mei_dir" == /tmp/_MEI* ]]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') [CDSS] Removing PyInstaller temp dir: $mei_dir" >> /var/log/cdss.log 2>/dev/null || true
-      rm -rf "$mei_dir"
+      sudo_or_root rm -rf "$mei_dir"
     fi
   done
   set +f
@@ -329,7 +267,7 @@ safe_remove_cdss_dir() {
   esac
 
   echo "$(date '+%Y-%m-%d %H:%M:%S') [CDSS] Removing CDSS directory: $resolved_dir" >> /var/log/cdss.log 2>/dev/null || true
-  rm -rfv "$resolved_dir"
+  sudo_or_root rm -rfv "$resolved_dir"
 
   if [[ -e "$resolved_dir" ]]; then
     cdss_dialog "$(trans "Видалення '$resolved_dir' не вдалося. Директорія все ще існує.")"
@@ -370,6 +308,13 @@ get_config_value() {
   echo "$value"
 }
 
+get_config_lockfile() {
+  local config_file="$1"
+  local safe_name
+  safe_name=$(printf '%s' "$config_file" | tr '/[:space:]' '___' | tr -cd '[:alnum:]_.-')
+  echo "/tmp/cdss-${safe_name}.lock"
+}
+
 set_config_value() {
   local config_file="$1"
   local section="$2"
@@ -394,6 +339,11 @@ set_config_value() {
   tmp_file=$(mktemp)
   local found=0
   local in_section=0
+  local file_owner=""
+  local file_mode=""
+
+  file_owner=$(stat -c '%u:%g' "$config_file" 2>/dev/null || echo "")
+  file_mode=$(stat -c '%a' "$config_file" 2>/dev/null || echo "")
 
   while IFS= read -r line; do
     if [[ "$line" == "[$section]" ]]; then
@@ -424,20 +374,27 @@ set_config_value() {
 
   if cmp -s "$config_file" "$tmp_file"; then
     rm -f "$tmp_file"
-    return 1
+    return 0
   fi
 
   local lockfile
-  lockfile=$(mktemp)
+  lockfile=$(get_config_lockfile "$config_file")
+  sudo_or_root touch "$lockfile"
+  sudo_or_root chmod 666 "$lockfile" 2>/dev/null || true
   exec 200>"$lockfile"
   flock -x 200
-  mv -f "$tmp_file" "$config_file"
+  sudo_or_root mv -f "$tmp_file" "$config_file"
+  if [[ -n "$file_owner" ]]; then
+    sudo_or_root chown "$file_owner" "$config_file" 2>/dev/null || true
+  fi
+  if [[ -n "$file_mode" ]]; then
+    sudo_or_root chmod "$file_mode" "$config_file" 2>/dev/null || true
+  fi
   if [[ "$config_file" == *"EnvironmentFile"* ]]; then
     sudo_or_root chmod 600 "$config_file" 2>/dev/null || true
   fi
   flock -u 200
   exec 200>&-
-  rm -f "$lockfile"
   return 0
 }
 
@@ -453,8 +410,12 @@ ensure_config_section() {
     return 0
   fi
 
-  printf "\n[%s]\n[/%s]\n" "$section" "$section" >> "$config_file"
-  return 0
+  local tmp_file
+  tmp_file=$(mktemp)
+  cat "$config_file" > "$tmp_file"
+  printf "\n[%s]\n[/%s]\n" "$section" "$section" >> "$tmp_file"
+  sudo_or_root mv -f "$tmp_file" "$config_file"
+  return $?
 }
 
 ensure_config_key() {
@@ -468,7 +429,9 @@ ensure_config_key() {
 
   if [[ -z "$current_value" ]]; then
     set_config_value "$config_file" "$section" "$key" "$default_value"
+    return $?
   fi
+  return 0
 }
 
 escape_for_execstart() {

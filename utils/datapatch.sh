@@ -33,6 +33,7 @@ apply_patch() {
   ensure_config_section "$config_file" "mhddos"
   ensure_config_key "$config_file" "mhddos" "source" "cdss"
   ensure_config_key "$config_file" "mhddos" "use-my-ip" "0"
+  ensure_config_key "$config_file" "mhddos" "extra-key" ""
   ensure_config_key "$config_file" "mhddos" "cron-to-run" ""
   ensure_config_key "$config_file" "mhddos" "cron-to-stop" ""
 

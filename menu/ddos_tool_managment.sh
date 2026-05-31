@@ -58,13 +58,20 @@ create_symlink() {
     fi
   done
 
-sudo_or_root rm -f /etc/systemd/system/mhddos.service
-sudo_or_root rm -f /etc/systemd/system/distress.service
-sudo_or_root rm -f /etc/systemd/system/x100.service
+  ensure_cdss_service_user
 
-sudo_or_root ln -sf "$SCRIPT_DIR"/services/mhddos.service /etc/systemd/system/mhddos.service
-sudo_or_root ln -sf "$SCRIPT_DIR"/services/distress.service /etc/systemd/system/distress.service
-sudo_or_root ln -sf "$SCRIPT_DIR"/services/x100.service /etc/systemd/system/x100.service
+  if command -v regenerate_x100_service_file >/dev/null 2>&1; then
+    regenerate_x100_service_file
+  fi
+
+  sudo_or_root rm -f /etc/systemd/system/mhddos.service
+  sudo_or_root rm -f /etc/systemd/system/distress.service
+  sudo_or_root rm -f /etc/systemd/system/x100.service
+
+  sudo_or_root ln -sf "$SCRIPT_DIR"/services/mhddos.service /etc/systemd/system/mhddos.service
+  sudo_or_root ln -sf "$SCRIPT_DIR"/services/distress.service /etc/systemd/system/distress.service
+  sudo_or_root ln -sf "$SCRIPT_DIR"/services/x100.service /etc/systemd/system/x100.service
+  service_daemon_reload || true
 }
 
 stop_services() {
@@ -159,8 +166,7 @@ ddos_tool_managment() {
     menu_items+=("$(trans "Зупинити атаку")")
   fi
   menu_items+=("$(trans "Налаштування автозапуску")")
-  is_not_arm_arch
-  if [[ $? == 1 ]]; then
+  if is_not_arm_arch; then
     menu_items+=("MHDDOS")
   fi
   menu_items+=("DISTRESS" "X100" "$(trans "Повернутись назад")")

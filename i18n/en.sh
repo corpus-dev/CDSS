@@ -81,6 +81,12 @@ declare -A localization=(
   ["Fail2ban не встановлений, будь ласка встановіть і спробуйте знову"]="Fail2ban is not installed, please install and try again"
   ["Увімкнути захист від брутфорсу"]="Enable brute force protection"
   ["Вимкнути захист від брутфорсу"]="Disable brute force protection"
+  ["Встановити фаєрвол"]="Install firewall"
+  ["Увімкнути фаєрвол"]="Enable firewall"
+  ["Вимкнути фаєрвол"]="Disable firewall"
+  ["Налаштувати фаєрвол"]="Configure firewall"
+  ["Встановити Fail2ban"]="Install Fail2ban"
+  ["Налаштувати Fail2ban"]="Configure Fail2ban"
   ["Fail2ban успішно увімкнено"]="Fail2ban successfully enabled"
   ["Fail2ban успішно вимкнено"]="Fail2ban successfully disabled"
 
@@ -98,6 +104,7 @@ declare -A localization=(
   ["Будь ласка введіть правильні значення"]="Please enter the correct values"
   ["Проксі (шлях до файлу або веб-ресурсу): "]="Proxy (path to file or web resource): "
   ["Проксі (шлях до файлу): "]="Proxy (path to file): "
+  ["Dev-key — параметр для розробників: "]="Dev-key — developer parameter: "
 
   ["Відсоткове співвідношення використання власної IP адреси (0-100): "]="Percentage of personal IP address usage (0-100): "
 

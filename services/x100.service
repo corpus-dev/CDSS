@@ -5,11 +5,19 @@ StartLimitIntervalSec=0
 
 [Service]
 Type=simple
+User=cdss
+Group=cdss
+SupplementaryGroups=docker
 Restart=on-failure
 RestartSec=10
 ExecStart=/opt/cybercorps/x100-for-docker/for-macOS-and-Linux-hosts/run-and-auto-update.bash
 ExecStop=/opt/cybercorps/x100-for-docker/for-macOS-and-Linux-hosts/stop.bash
 WorkingDirectory=/opt/cybercorps/x100-for-docker/for-macOS-and-Linux-hosts/
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/cybercorps/x100-for-docker /var/log /tmp
 
 StandardOutput=append:/opt/cybercorps/x100-for-docker/put-your-ovpn-files-here/x100-log-short.txt
 StandardError=append:/opt/cybercorps/x100-for-docker/put-your-ovpn-files-here/x100-log-short.txt
