@@ -48,7 +48,7 @@ if ! declare -p localization >/dev/null 2>&1; then
 fi
 
 trans() {
-  if [[ -z "${localization[$1]+set}" ]]; then
+  if [[ ${#localization[@]} -eq 0 || -z "${localization[$1]:-}" ]]; then
     echo "$1"
   else
     echo "${localization[$1]}"
