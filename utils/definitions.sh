@@ -258,10 +258,13 @@ safe_remove_cdss_dir() {
       ;;
   esac
 
-  if [[ ! -f "$resolved_dir/bin/cdss" ]]; then
-    cdss_dialog "$(trans "Файл '$resolved_dir/bin/cdss' не знайдено. Перевірте шлях.")"
-    return 1
-  fi
+  case "$resolved_dir" in
+    */cdss*) ;;
+    *)
+      cdss_dialog "$(trans "Resolved директорія '$resolved_dir' не містить 'cdss'. Перевірте шлях.")"
+      return 1
+      ;;
+  esac
 
   echo "$(date '+%Y-%m-%d %H:%M:%S') [CDSS] Removing CDSS directory: $resolved_dir" >> /var/log/cdss.log 2>/dev/null || true
   sudo_or_root rm -rfv "$resolved_dir"
