@@ -31,6 +31,7 @@ export TOOL_DIR="$SCRIPT_DIR/bin"
 
 reload_runtime_files() {
   local runtime_files=(
+    "$SCRIPT_DIR/utils/platform_matrix.sh"
     "$SCRIPT_DIR/utils/definitions.sh"
     "$SCRIPT_DIR/utils/dialog.sh"
     "$SCRIPT_DIR/utils/datapatch.sh"

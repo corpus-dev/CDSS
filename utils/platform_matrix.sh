@@ -29,7 +29,7 @@ get_distribution_id() {
 get_distribution_like() {
   if [[ -r /etc/os-release ]]; then
     local dist_like
-    dist_like="$(. /etc/os-release && echo "$ID_LIKE")"
+    dist_like="$(. /etc/os-release && echo "${ID_LIKE:-}")"
     dist_like=$(echo "$dist_like" | tr '[:upper:]' '[:lower:]')
     echo "$dist_like"
   else
