@@ -563,35 +563,37 @@ initiate_distress() {
     confirm_dialog "$(trans "DISTRESS не встановлений, будь ласка встановіть і спробуйте знову")"
     ddos_tool_managment
   else
-      if service_is_active distress; then
-        local active_disactive="$(trans "Зупинка DISTRESS")"
-      else
-        local active_disactive="$(trans "Запуск DISTRESS")"
-      fi
-      local menu_items=("$active_disactive" "$(trans "Налаштування DISTRESS")" "$(trans "Статус DISTRESS")" "$(trans "Повернутись назад")")
-      display_menu "DISTRESS" "${menu_items[@]}"
-      res="$CDSS_SELECTION"
+      while true; do
+         if service_is_active distress; then
+           local active_disactive="$(trans "Зупинка DISTRESS")"
+         else
+           local active_disactive="$(trans "Запуск DISTRESS")"
+         fi
+         local menu_items=("$active_disactive" "$(trans "Налаштування DISTRESS")" "$(trans "Статус DISTRESS")" "$(trans "Повернутись назад")")
+         display_menu "DISTRESS" "${menu_items[@]}"
+         res="$CDSS_SELECTION"
 
-       case "$res" in
-         "$(trans "Зупинка DISTRESS")" )
-            distress_stop
-            distress_get_status
-         ;;
-         "$(trans "Запуск DISTRESS")" )
-             distress_run
-             distress_get_status
-         ;;
-         "$(trans "Налаштування DISTRESS")" )
-            configure_distress
-            return 0
-          ;;
-         "$(trans "Статус DISTRESS")" )
-           distress_get_status
-         ;;
-         "$(trans "Повернутись назад")" )
-           ddos_tool_managment
-         ;;
-       esac
+          case "$res" in
+            "$(trans "Зупинка DISTRESS")" )
+               distress_stop
+               distress_get_status
+            ;;
+            "$(trans "Запуск DISTRESS")" )
+                distress_run
+                distress_get_status
+            ;;
+            "$(trans "Налаштування DISTRESS")" )
+               configure_distress
+               continue
+              ;;
+            "$(trans "Статус DISTRESS")" )
+              distress_get_status
+            ;;
+            "$(trans "Повернутись назад")" )
+              return 0
+            ;;
+          esac
+      done
   fi
 }
 

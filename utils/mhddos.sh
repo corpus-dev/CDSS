@@ -464,34 +464,36 @@ initiate_mhddos() {
     confirm_dialog "$(trans "MHDDOS не встановлений, будь ласка встановіть і спробуйте знову")"
     ddos_tool_managment
   else
-      if service_is_active mhddos; then
-        local active_disactive="$(trans "Зупинка MHDDOS")"
-      else
-        local active_disactive="$(trans "Запуск MHDDOS")"
-      fi
-      local menu_items=("$active_disactive" "$(trans "Налаштування MHDDOS")" "$(trans "Статус MHDDOS")" "$(trans "Повернутись назад")")
-      display_menu "MHDDOS" "${menu_items[@]}"
-      res="$CDSS_SELECTION"
+      while true; do
+         if service_is_active mhddos; then
+           local active_disactive="$(trans "Зупинка MHDDOS")"
+         else
+           local active_disactive="$(trans "Запуск MHDDOS")"
+         fi
+         local menu_items=("$active_disactive" "$(trans "Налаштування MHDDOS")" "$(trans "Статус MHDDOS")" "$(trans "Повернутись назад")")
+         display_menu "MHDDOS" "${menu_items[@]}"
+         res="$CDSS_SELECTION"
 
-      case "$res" in
-        "$(trans "Зупинка MHDDOS")" )
-          mhddos_stop
-          mhddos_get_status
-        ;;
-        "$(trans "Запуск MHDDOS")" )
-          mhddos_run
-          mhddos_get_status
-        ;;
-        "$(trans "Налаштування MHDDOS")" )
-           configure_mhddos
-           return 0
-          ;;
-        "$(trans "Статус MHDDOS")" )
-          mhddos_get_status
-        ;;
-        "$(trans "Повернутись назад")" )
-          ddos_tool_managment
-        ;;
-      esac
+         case "$res" in
+           "$(trans "Зупинка MHDDOS")" )
+             mhddos_stop
+             mhddos_get_status
+           ;;
+           "$(trans "Запуск MHDDOS")" )
+             mhddos_run
+             mhddos_get_status
+           ;;
+           "$(trans "Налаштування MHDDOS")" )
+              configure_mhddos
+              continue
+             ;;
+           "$(trans "Статус MHDDOS")" )
+             mhddos_get_status
+           ;;
+           "$(trans "Повернутись назад")" )
+             return 0
+           ;;
+         esac
+      done
   fi
 }

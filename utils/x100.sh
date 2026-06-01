@@ -162,37 +162,39 @@ initiate_x100() {
       confirm_dialog "$(trans "Докер успішно встановлено")"
       add_user_to_docker_group
    fi
-   if service_is_active x100; then
-     active_disactive="$(trans "Зупинка X100")"
-   else
-     active_disactive="$(trans "Запуск X100")"
-   fi
-    menu_items=("$active_disactive" "$(trans "Налаштування X100")"  "$(trans "Статус X100")" "$(trans "Повернутись назад")")
-    local res
-     display_menu "X100" "${menu_items[@]}"
-     res="$CDSS_SELECTION"
+    while true; do
+       if service_is_active x100; then
+         local active_disactive="$(trans "Зупинка X100")"
+       else
+         local active_disactive="$(trans "Запуск X100")"
+       fi
+        local menu_items=("$active_disactive" "$(trans "Налаштування X100")"  "$(trans "Статус X100")" "$(trans "Повернутись назад")")
+        local res
+         display_menu "X100" "${menu_items[@]}"
+         res="$CDSS_SELECTION"
 
-   case "$res" in
-    "$(trans "Запуск X100")" )
-       x100_run
-       x100_get_status
-     ;;
-    "$(trans "Зупинка X100")" )
-       x100_stop
-       x100_get_status
-     ;;
-         "$(trans "Налаштування X100")" )
-        configure_x100
-        return 0
-      ;;
-    "$(trans "Статус X100")" )
-       x100_get_status
-     ;;
-    "$(trans "Повернутись назад")" )
-       ddos_tool_managment
-     ;;
-    esac
-}
+       case "$res" in
+        "$(trans "Запуск X100")" )
+           x100_run
+           x100_get_status
+         ;;
+        "$(trans "Зупинка X100")" )
+           x100_stop
+           x100_get_status
+         ;;
+             "$(trans "Налаштування X100")" )
+            configure_x100
+            continue
+          ;;
+        "$(trans "Статус X100")" )
+           x100_get_status
+         ;;
+        "$(trans "Повернутись назад")" )
+           return 0
+         ;;
+        esac
+    done
+ }
 
 configure_x100() {
     clear
