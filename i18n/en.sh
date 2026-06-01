@@ -26,7 +26,6 @@ declare -gA localization=(
   ["Управління ддос інструментами"]="Manage DDOS tools"
 
   ["Для збору особистої статистики та відображення у лідерборді на офіційному сайті."]="To gather personal statistics and display on the leaderboard on the official website."
-  ["Надається Telegram ботом"]="Provided by the Telegram bot"
   ["Щоб пропустити, натисніть Enter"]="To skip, press Enter"
 
   ["Розширення портів"]="Port extension"
@@ -119,7 +118,7 @@ declare -gA localization=(
 
   ["Неможливо визначити розрядность операційної системи"]="Unable to determine the operating system's bit depth"
 
-  ["Юзер ІД: "]="User ID: "
+  ["Corpus ID: "]="Corpus ID: "
   ["Мова (ua | en | es | de | pl | it): "]="Language (ua | en | es | de | pl | it): "
   ["Кількість копій (auto | X): "]="Number of copies (auto | X): "
   ["Успішно виконано"]="Execution successful"
@@ -210,11 +209,13 @@ declare -gA localization=(
   ["X100 зупинено"]="X100 stopped"
   ["Не вдалося зупинити X100"]="Failed to stop X100"
   ["Автозавантаження підтримується тільки на systemd та openrc."]="Autostart is only supported on systemd and openrc."
-  ["В статусі відновлення, очікуйте на оновлення"]="Recovery in progress, waiting for update"
+  ["Corpus ID: https://t.me/corps_statistics_bot"]="Corpus ID: https://t.me/corps_statistics_bot"
   ["Threads: "]="Threads: "
   ["SCRIPT_DIR не визначено, пропуск оновлення user_id"]="SCRIPT_DIR is not set, skipping user_id update"
-  ["Юзер ІД має містити лише літери, цифри, крапки, тире та підкреслення"]="User ID must contain only letters, numbers, dots, dashes, and underscores"
-  ["Юзер ІД оновлено успішно"]="User ID updated successfully"
+  ["Corpus ID має містити лише літери, цифри, крапки, тире та підкреслення"]="Corpus ID must contain only letters, numbers, dots, dashes, and underscores"
+  ["Corpus ID має містити лише літери, цифри та підкреслення"]="Corpus ID must contain only letters, numbers, and underscores"
+  ["Corpus ID порожній. Встановлення перервано."]="Corpus ID is empty. Installation aborted."
+  ["Corpus ID оновлено успішно"]="Corpus ID updated successfully"
   ["Помилка запису: не вдалося оновити файл"]="Write error: could not update file"
   ["Шлях до лог-файлу не вказано"]="Log file path not specified"
   ["Лог-файл не знайдено: \$log_file"]="Log file not found: \$log_file"

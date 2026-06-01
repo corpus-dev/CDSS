@@ -19,13 +19,13 @@ update_env_user_id() {
   fi
 
   if [[ ! "$new_user_id" =~ ^[a-zA-Z0-9._-]+$ ]]; then
-    cdss_dialog "$(trans "Юзер ІД має містити лише літери, цифри, крапки, тире та підкреслення")"
+    cdss_dialog "$(trans "Corpus ID має містити лише літери, цифри, крапки, тире та підкреслення")"
     return 1
   fi
 
   if set_config_value "$environment_file" "mhddos" "user-id" "$new_user_id" &&
      set_config_value "$environment_file" "distress" "user-id" "$new_user_id"; then
-    cdss_dialog "$(trans "Юзер ІД оновлено успішно")"
+    cdss_dialog "$(trans "Corpus ID оновлено успішно")"
     return 0
   else
     cdss_dialog "$(trans "Помилка запису: не вдалося оновити файл")"
@@ -45,11 +45,10 @@ ddos() {
       clear
       echo -ne "\n"
       echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}\n"
-      echo -ne "${GREEN}$(trans "Надається Telegram ботом")${NC} ${ORANGE}$(trans "В статусі відновлення, очікуйте на оновлення")${NC}\n"
+      echo -ne "${GREEN}$(trans "Corpus ID: https://t.me/corps_statistics_bot")${NC}\n"
       echo -ne "\n"
       echo -ne "${GREEN}$(trans "Щоб пропустити, натисніть Enter")${NC}\n\n"
-      echo -ne "$(trans "Юзер ІД: ")"
-      read -r user_id
+      echo -ne "$(trans "Corpus ID: ")"
 
       if [[ -n "$SCRIPT_DIR" ]]; then
         local environment_file="$SCRIPT_DIR/services/EnvironmentFile"

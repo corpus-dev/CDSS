@@ -73,14 +73,14 @@ configure_mhddos() {
 echo -e "${ORANGE}$(trans "Залишіть пустим якщо бажаєте видалити параметри")${NC}"
     echo -ne "\n"
     echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}\n"
-    echo -ne "${GREEN}$(trans "Надається Telegram ботом")${NC} ${ORANGE}$(trans "В статусі відновлення, очікуйте на оновлення")${NC}\n"
+    echo -ne "${GREEN}$(trans "Corpus ID: https://t.me/corps_statistics_bot")${NC}\n"
     echo -ne "\n"
-    read -e -p "$(trans "Юзер ІД: ")" -i "$(get_mhddos_variable 'user-id')" user_id
+    read -e -p "$(trans "Corpus ID: ")" -i "$(get_mhddos_variable 'user-id')" user_id
     if [[ -n "$user_id" ]];then
       while [[ ! $user_id =~ ^[0-9]+$ ]]
       do
         echo "$(trans "Будь ласка введіть правильні значення")"
-        read -e -p "$(trans "Юзер ІД: ")" -i "$(get_mhddos_variable 'user-id')" user_id
+        read -e -p "$(trans "Corpus ID: ")" -i "$(get_mhddos_variable 'user-id')" user_id
       done
     fi
 

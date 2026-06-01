@@ -198,7 +198,7 @@ configure_x100() {
     echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}\n"
     echo -ne "\n"
     local user_id
-    read -e -p "$(trans "Юзер ІД: ")" -i "$(get_x100_variable "itArmyUserId")"  user_id
+    read -e -p "$(trans "Corpus ID: ")" -i "$(get_x100_variable "itArmyUserId")"  user_id
 
     local configPath="$SCRIPT_DIR/x100-for-docker/put-your-ovpn-files-here/x100-config.txt"
     if [[ ! -f "$configPath" ]]; then
@@ -350,15 +350,15 @@ install_x100() {
 
     echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}\n"
     echo -ne "\n"
-    read -e -p "$(trans "Юзер ІД: ")"  user_id
+    read -e -p "$(trans "Corpus ID: ")"  user_id
 
     if [[ -z "$user_id" ]]; then
-      cdss_dialog "$(trans "Юзер ІД порожній. Встановлення перервано.")"
+      cdss_dialog "$(trans "Corpus ID порожній. Встановлення перервано.")"
       return 1
     fi
 
     if [[ ! "$user_id" =~ ^[a-zA-Z0-9_]+$ ]]; then
-      cdss_dialog "$(trans "Юзер ІД має містити лише літери, цифри та підкреслення")"
+      cdss_dialog "$(trans "Corpus ID має містити лише літери, цифри та підкреслення")"
       return 1
     fi
 
@@ -409,7 +409,7 @@ install_x100() {
      echo -ne "${GREEN}$(trans "Also, be aware, that X100 gradually increases resources usage.")${NC}\n"
      echo -ne "${GREEN}$(trans "X100 will reach peak performance approximately in 3 hours after launch.")${NC}\n"
      echo -ne "${GREEN}$(trans "Logs will be stored in ${ORANGE}$SCRIPT_DIR/x100-for-docker/put-your-ovpn-files-here${NC} ${GREEN}folder.${NC}")${NC}\n"
-     echo -ne "${GREEN}$(trans "For more information contact us on Telegram ${ORANGE}https://t.me/it_army_ua${NC}")${NC}\n"
+     echo -ne "${GREEN}$(trans "Corpus ID: https://t.me/corps_statistics_bot")${NC}\n"
      echo -ne "${GREEN}$(trans "Also, there are some manuals and docs on our official website ${ORANGE}https://x100.vn.ua/${NC}")${NC}\n"
      echo -ne "${GREEN}$(trans "Best regards! X100 IT ARMY TEAM! Glory to UKRAINE!")${NC}\n"
 
