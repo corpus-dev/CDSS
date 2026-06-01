@@ -6,7 +6,7 @@ install_fail2ban() {
   local init_system
   init_system=$(get_init_system)
 
-  cdss_dialog "$(trans "Встановлюємо Fail2ban")"
+  cdss_dialog "$(trans "Буде встановлено Fail2ban. Він відстежує невдалі SSH-логіни і тимчасово блокує джерела brute-force спроб.")"
 
   case "$pkg_manager" in
     dnf)
@@ -46,7 +46,10 @@ install_fail2ban() {
       ;;
   esac
 
-  install >/dev/null 2>&1
+  if ! install >/dev/null 2>&1; then
+    confirm_dialog "$(trans "Fail2ban встановлення не вдалося")"
+    return 1
+  fi
   confirm_dialog "$(trans "Fail2ban успішно встановлено")"
 }
 
@@ -61,12 +64,14 @@ fail2ban_is_active() {
 }
 
 enable_fail2ban() {
+  cdss_dialog "$(trans "Увімкнення Fail2ban додасть сервіс до автозапуску і запустить SSH brute-force захист зараз.")"
   service_enable fail2ban
   service_start fail2ban
   confirm_dialog "$(trans "Fail2ban успішно увімкнено")"
 }
 
 disable_fail2ban() {
+  cdss_dialog "$(trans "Вимкнення Fail2ban зупинить автоматичне блокування brute-force спроб. Використовуйте це лише для діагностики.")"
   service_disable fail2ban
   service_stop fail2ban
   confirm_dialog "$(trans "Fail2ban успішно вимкнено")"
@@ -85,17 +90,18 @@ configure_fail2ban() {
   if [[ $? == 1 ]]; then
     confirm_dialog "$(trans "Fail2ban не встановлений, будь ласка встановіть і спробуйте знову")"
   else
-    cdss_dialog "$(trans "Налаштовуємо Fail2ban")"
+    cdss_dialog "$(trans "Буде створено /etc/fail2ban/jail.d/cdss-ssh.conf: SSH захист увімкнено, maxretry=3, bantime=600 секунд.")"
     configure() {
       local jail_local="/etc/fail2ban/jail.local"
-      if [[ ! -f "$jail_local" ]]; then
+      if [[ ! -f "$jail_local" && -f /etc/fail2ban/jail.conf ]]; then
         sudo_or_root cp /etc/fail2ban/jail.conf "$jail_local"
       fi
 
       local cdss_conf="/etc/fail2ban/jail.d/cdss-ssh.conf"
       local tmp_conf
       tmp_conf=$(mktemp)
-      echo "[ssh" >> "$tmp_conf"
+      sudo_or_root mkdir -p /etc/fail2ban/jail.d
+      echo "[sshd]" >> "$tmp_conf"
       echo "enabled = true" >> "$tmp_conf"
       echo "port = ssh" >> "$tmp_conf"
       echo "filter = sshd" >> "$tmp_conf"
@@ -104,11 +110,14 @@ configure_fail2ban() {
       echo "backend = %(sshd_backend)s" >> "$tmp_conf"
       echo "maxretry = 3" >> "$tmp_conf"
       echo "bantime = 600" >> "$tmp_conf"
-      echo "]" >> "$tmp_conf"
 
       sudo_or_root mv -f "$tmp_conf" "$cdss_conf"
+      sudo_or_root chmod 644 "$cdss_conf"
     }
-    configure >/dev/null 2>&1
+    if ! configure >/dev/null 2>&1; then
+      confirm_dialog "$(trans "Fail2ban налаштування не вдалося")"
+      return 1
+    fi
     confirm_dialog "$(trans "Fail2ban успішно налаштовано")"
   fi
 }

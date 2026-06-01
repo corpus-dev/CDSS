@@ -331,7 +331,7 @@ regenerate_distress_service_file() {
         echo "$line" >> "$tmp_svc"
       fi
     done < "${SCRIPT_DIR}/services/distress.service"
-    mv -f "$tmp_svc" "${SCRIPT_DIR}/services/distress.service"
+    sudo_or_root mv -f "$tmp_svc" "${SCRIPT_DIR}/services/distress.service"
     service_daemon_reload
   fi
 }
@@ -534,7 +534,7 @@ run_distress_on_schedule() {
   fi
   create_symlink
 
-  chmod +x "$SCRIPT_DIR/utils/distress.sh"
+  sudo_or_root chmod +x "$SCRIPT_DIR/utils/distress.sh"
   local cron_time_to_run=$(get_distress_variable 'cron-to-run')
   local cron_time_to_stop=$(get_distress_variable 'cron-to-stop')
   cron_remove_job "distress_run" || true

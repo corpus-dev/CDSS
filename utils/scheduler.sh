@@ -160,3 +160,36 @@ cron_install_job() {
   rm -f "$tmp_file"
   return 1
 }
+
+cleanup_all_cdss_crons() {
+  local tmp_file
+  tmp_file=$(mktemp)
+  local lockfile
+  lockfile=$(mktemp)
+
+  local crontab_content
+  crontab_content=$(sudo_or_root crontab -l 2>/dev/null || true)
+
+  while IFS= read -r line; do
+    if [[ "$line" == "# CDSS:"* ]]; then
+      continue
+    fi
+    echo "$line" >> "$tmp_file"
+  done <<< "$crontab_content"
+
+  if [[ -s "$tmp_file" ]]; then
+    exec 200>"$lockfile"
+    flock -x 200
+    sudo_or_root crontab "$tmp_file" 2>/dev/null
+    flock -u 200
+    exec 200>&-
+  else
+    : > "$tmp_file"
+    exec 200>"$lockfile"
+    flock -x 200
+    sudo_or_root crontab "$tmp_file" 2>/dev/null
+    flock -u 200
+    exec 200>&-
+  fi
+  rm -f "$tmp_file" "$lockfile"
+}

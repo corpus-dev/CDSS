@@ -126,7 +126,7 @@ read -e -p "$(trans "Threads: ")" -i "$(get_mhddos_variable "threads")" threads
       while [[ ! $threads =~ ^[0-9]+$ ]]
       do
         echo "$(trans "Будь ласка введіть правильні значення")"
-        read -e -p "Threads: " -i "$(get_mhddos_variable 'threads')" threads
+        read -e -p "$(trans "Threads: ")" -i "$(get_mhddos_variable 'threads')" threads
       done
     fi
 
@@ -136,13 +136,16 @@ read -e -p "$(trans "Threads: ")" -i "$(get_mhddos_variable "threads")" threads
 
     params["proxies"]="$proxies"
 
+    read -e -p "$(trans "Dev-key — параметр для розробників: ")" -i "$(get_mhddos_variable 'extra-key')" extra_key
+    params["extra-key"]="$extra_key"
+
     echo -ne "\n"
     echo -e "${ORANGE}$(trans "Мережеві інтерфейси (через пробіл: eth0 eth1 тощо.)")${NC}"
     read -e -p "$(trans "Інтерфейси: ")"  -i "$(get_mhddos_variable 'ifaces')" interface
     if [[ -n "$interface" ]];then
       params["ifaces"]="$interface"
     else
-      params["ifaces"]=" "
+      params["ifaces"]=""
     fi
 
     for i in "${!params[@]}"; do
@@ -222,7 +225,7 @@ regenerate_mhddos_service_file() {
         echo "$line" >> "$tmp_svc"
       fi
     done < "${SCRIPT_DIR}/services/mhddos.service"
-    mv -f "$tmp_svc" "${SCRIPT_DIR}/services/mhddos.service"
+    sudo_or_root mv -f "$tmp_svc" "${SCRIPT_DIR}/services/mhddos.service"
     service_daemon_reload
   fi
 }
@@ -312,12 +315,12 @@ mhddos_installed() {
   fi
 }
 
+is_arm_arch() {
+  [[ "$OSARCH" == armv6* || "$OSARCH" == armv7* || "$OSARCH" == armv8* || "$(get_normalized_arch)" == "arm32" ]]
+}
+
 is_not_arm_arch() {
-  if [[ "$OSARCH" != armv6* && "$OSARCH" != armv7* && $OSARCH != armv8* ]]; then
-    return 1
-  else
-    return 0
-  fi
+  ! is_arm_arch
 }
 
 mhddos_configure_scheduler() {
@@ -426,7 +429,7 @@ run_mhddos_on_schedule() {
   fi
   create_symlink
 
-  chmod +x "$SCRIPT_DIR/utils/mhddos.sh"
+  sudo_or_root chmod +x "$SCRIPT_DIR/utils/mhddos.sh"
   local cron_time_to_run=$(get_mhddos_variable 'cron-to-run')
   local cron_time_to_stop=$(get_mhddos_variable 'cron-to-stop')
   cron_remove_job "mhddos_run" || true
