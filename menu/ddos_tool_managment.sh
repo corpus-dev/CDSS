@@ -9,12 +9,12 @@ show_log_tail() {
   fi
 
   if [[ ! -f "$log_file" ]]; then
-    cdss_dialog "$(trans "Лог-файл не знайдено: $log_file")"
+    cdss_dialog "$(trans "Лог-файл не знайдено: \$log_file")"
     return 1
   fi
 
   if [[ ! -r "$log_file" ]]; then
-    cdss_dialog "$(trans "Лог-файл недоступний для читання: $log_file")"
+    cdss_dialog "$(trans "Лог-файл недоступний для читання: \$log_file")"
     return 1
   fi
 
@@ -43,7 +43,7 @@ create_symlink() {
   init_system=$(get_init_system)
 
   if [[ "$init_system" != "systemd" ]]; then
-    cdss_dialog "$(trans "Створення symlink працює тільки для systemd. Поточна init-система: $init_system")"
+    cdss_dialog "$(trans "Створення symlink працює тільки для systemd. Поточна init-система: \$init_system")"
     return 1
   fi
 
@@ -53,7 +53,7 @@ create_symlink() {
   for svc in "${service_files[@]}"; do
     local service_path="$SCRIPT_DIR/services/${svc}.service"
     if [[ ! -f "$service_path" ]]; then
-      cdss_dialog "$(trans "Сервісний файл відсутній: $service_path")"
+      cdss_dialog "$(trans "Сервісний файл відсутній: \$service_path")"
       return 1
     fi
   done
@@ -118,7 +118,7 @@ get_ddoss_status() {
   if [[ -n "$service" ]]; then
     while true; do
       clear
-      echo -e "${GREEN}$(trans "Запущено $service")${NC}"
+      echo -e "${GREEN}$(trans "Запущено \$service")${NC}"
 
       if [[ -f /etc/os-release ]]; then
         local lsb_version

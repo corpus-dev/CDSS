@@ -10,7 +10,7 @@ update_env_user_id() {
   fi
 
   if [[ ! -f "$environment_file" ]]; then
-    cdss_dialog "$(trans "Файл EnvironmentFile не знайдено: $environment_file")"
+    cdss_dialog "$(trans "Файл EnvironmentFile не знайдено: \$environment_file")"
     return 1
   fi
 
@@ -34,7 +34,7 @@ update_env_user_id() {
 }
 
 ddos() {
-  local menu_items=("$(trans "Встановити DDOS інструменти")" "$(trans "Керування DDOS інструментами")" "$(trans "Повернутися")")
+  local menu_items=("$(trans "Встановити DDOS інструменти")" "$(trans "Керування DDOS інструментами")" "$(trans "Повернутись назад")")
 
   while true; do
     display_menu "$(trans "DDOS центр")" "${menu_items[@]}"
@@ -49,6 +49,7 @@ ddos() {
       echo -ne "\n"
       echo -ne "${GREEN}$(trans "Щоб пропустити, натисніть Enter")${NC}\n\n"
       echo -ne "$(trans "Corpus ID: ")"
+      read -r user_id
 
       if [[ -n "$SCRIPT_DIR" ]]; then
         local environment_file="$SCRIPT_DIR/services/EnvironmentFile"
@@ -66,7 +67,7 @@ ddos() {
     "$(trans "Керування DDOS інструментами")")
       ddos_tool_managment
       ;;
-    "$(trans "Повернутися")")
+    "$(trans "Повернутись назад")")
       return 0
       ;;
     esac
