@@ -136,6 +136,8 @@ declare -gA localization=(
   ["Не можливо виконати дію"]="Unable to perform the action"
 
   ["Перевіряємо наявність оновлень"]="Checking for updates"
+  ["Не вдалося отримати версію з сервера. Перевірте мережу."]="Failed to get version from server. Check your network."
+  ["Встановлена остання версія"]="Latest version already installed"
   ["Оновляємо CDSS"]="Updating CDSS"
   ["CDSS успішно оновлено"]="CDSS updated successfully"
   ["Встановлена версія"]="Installed Version"

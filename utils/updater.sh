@@ -53,12 +53,31 @@ prepare_for_update() {
   local remote_version
   remote_version=$(curl -s --fail --location --show-error --connect-timeout 10 --max-time 60 'https://raw.githubusercontent.com/corpus-dev/CDSS/main/version.txt' 2>/dev/null)
 
+  if [[ -z "$remote_version" ]]; then
+    echo -e "${RED}$(trans "Не вдалося отримати версію з сервера. Перевірте мережу.")${NC}"
+    write_version $(date +%s)
+    sleep 2
+    return 1
+  fi
+
   echo -e "$(trans "Актуальна версія") = ${ORANGE}${remote_version}${NC}"
 
-  if [[ -n "$remote_version" ]]; then
-    update_cdss
+  local local_version
+  if [[ -f "${SCRIPT_DIR}/version.txt" ]]; then
+    local_version=$(cat "${SCRIPT_DIR}/version.txt")
   fi
-  write_version $(date +%s)
+
+  if [[ "$local_version" == "$remote_version" ]]; then
+    echo -e "${GREEN}$(trans "Встановлена остання версія")${NC}"
+    write_version $(date +%s)
+    sleep 2
+    return 0
+  fi
+
+  update_cdss
+  if [[ $? -eq 0 ]]; then
+    write_version $(date +%s)
+  fi
   sleep 2
 }
 
