@@ -150,8 +150,9 @@ initiate_x100() {
            confirm_dialog "$(trans "Х100 успішно встановлено")"
          ;;
          "$(trans "Ні")" )
-           ddos_tool_managment
-         ;;
+            ddos_tool_managment
+            return
+          ;;
        esac
    fi
    docker_installed
@@ -195,7 +196,7 @@ initiate_x100() {
 
 configure_x100() {
     clear
-    echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}\n"
+    echo -ne "${GREEN}$(trans "Налаштування X100")${NC}\n"
     echo -ne "\n"
     local user_id
     read -e -p "$(trans "Corpus ID: ")" -i "$(get_x100_variable "itArmyUserId")"  user_id
@@ -348,7 +349,7 @@ install_x100() {
       return 1
     fi
 
-    echo -ne "${GREEN}$(trans "В процесі відновлення")${NC}\n"
+    echo -ne "${GREEN}$(trans "Налаштування X100")${NC}\n"
     echo -ne "\n"
     read -e -p "$(trans "Corpus ID: ")"  user_id
 
@@ -402,16 +403,16 @@ install_x100() {
       cdss_dialog "$(trans "Не вдалося створити symlink")"
       return 1
     fi
-     echo -ne "${GREEN}$(trans "This installation of X100 uses free and slow VPNGate VPN provider.")${NC}\n"
+     echo -ne "${GREEN}$(trans "Це встановлення X100 використовує безкоштовний і повільний VPN-провайдер VPNGate.")${NC}\n"
      echo -ne "${GREEN}${ORANGE}http://www.vpngate.net${NC}\n"
-     echo -ne "${GREEN}$(trans "You will need a commercial VPN account to achieve top attack speed (1 Gbit/s or more).")${NC}\n"
-     echo -ne "${GREEN}$(trans "(Use this link to get full-featured VPN for free https://www.vpnunlimited.com/ua/palianytsia)")${NC}\n"
-     echo -ne "${GREEN}$(trans "Also, be aware, that X100 gradually increases resources usage.")${NC}\n"
-     echo -ne "${GREEN}$(trans "X100 will reach peak performance approximately in 3 hours after launch.")${NC}\n"
-     echo -ne "${GREEN}$(trans "Logs will be stored in ${ORANGE}$SCRIPT_DIR/x100-for-docker/put-your-ovpn-files-here${NC} ${GREEN}folder.${NC}")${NC}\n"
+     echo -ne "${GREEN}$(trans "Для досягнення максимальної швидкості атаки (1 Гбіт/с або більше) вам знадобиться комерційний VPN-акаунт.")${NC}\n"
+     echo -ne "${GREEN}$(trans "Посилання на безкоштовний повнофункціональний VPN: https://www.vpnunlimited.com/ua/palianytsia")${NC}\n"
+     echo -ne "${GREEN}$(trans "Також зверніть увагу, що X100 поступово збільшує використання ресурсів.")${NC}\n"
+     echo -ne "${GREEN}$(trans "X100 досягне пікової продуктивності приблизно через 3 години після запуску.")${NC}\n"
+     echo -ne "${GREEN}$(trans "Логи зберігаються в папці") ${ORANGE}$SCRIPT_DIR/x100-for-docker/put-your-ovpn-files-here${NC}${NC}\n"
      echo -ne "${GREEN}$(trans "Corpus ID: https://t.me/corps_statistics_bot")${NC}\n"
-     echo -ne "${GREEN}$(trans "Also, there are some manuals and docs on our official website ${ORANGE}https://x100.vn.ua/${NC}")${NC}\n"
-     echo -ne "${GREEN}$(trans "Best regards! X100 IT ARMY TEAM! Glory to UKRAINE!")${NC}\n"
+     echo -ne "${GREEN}$(trans "Також документація на офіційному сайті") ${ORANGE}https://x100.vn.ua/${NC}${NC}\n"
+     echo -ne "${GREEN}$(trans "З повагою, X100 Кіберкорпус TEAM! Слава УКРАЇНІ!")${NC}\n"
 
     echo -e "${ORANGE}$(trans "Нажміть будь яку клавішу щоб продовжити")${NC}"
     read -s -n 1 key

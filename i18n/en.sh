@@ -265,12 +265,14 @@ declare -gA localization=(
   ["Не вдалося створити symlink"]="Failed to create symlink"
   ["Initial Distress Scale (10-40960): "]="Initial Distress Scale (10-40960): "
   ["Ignore Bundled Free Vpn (0-1): "]="Ignore Bundled Free Vpn (0-1): "
-  ["This installation of X100 uses free and slow VPNGate VPN provider."]="This installation of X100 uses free and slow VPNGate VPN provider."
-  ["You will need a commercial VPN account to achieve top attack speed (1 Gbit/s or more)."]="You will need a commercial VPN account to achieve top attack speed (1 Gbit/s or more)."
-  ["(Use this link to get full-featured VPN for free https://www.vpnunlimited.com/ua/palianytsia)"]="(Use this link to get full-featured VPN for free https://www.vpnunlimited.com/ua/palianytsia)"
-  ["Also, be aware, that X100 gradually increases resources usage."]="Also, be aware, that X100 gradually increases resources usage."
-  ["X100 will reach peak performance approximately in 3 hours after launch."]="X100 will reach peak performance approximately in 3 hours after launch."
-  ["Best regards! X100 IT ARMY TEAM! Glory to UKRAINE!"]="Best regards! X100 IT ARMY TEAM! Glory to UKRAINE!"
+  ["Це встановлення X100 використовує безкоштовний і повільний VPN-провайдер VPNGate."]="This installation of X100 uses free and slow VPNGate VPN provider."
+  ["Для досягнення максимальної швидкості атаки (1 Гбіт/с або більше) вам знадобиться комерційний VPN-акаунт."]="To achieve maximum attack speed (1 Gbit/s or more) you will need a commercial VPN account."
+  ["Посилання на безкоштовний повнофункціональний VPN: https://www.vpnunlimited.com/ua/palianytsia"]="Free full-featured VPN link: https://www.vpnunlimited.com/ua/palianytsia"
+  ["Також зверніть увагу, що X100 поступово збільшує використання ресурсів."]="Also, be aware that X100 gradually increases resources usage."
+  ["X100 досягне пікової продуктивності приблизно через 3 години після запуску."]="X100 will reach peak performance approximately 3 hours after launch."
+  ["Логи зберігаються в папці"]="Logs are stored in the folder"
+  ["Також документація на офіційному сайті"]="Also documentation on the official website"
+  ["З повагою, X100 Кіберкорпус TEAM! Слава УКРАЇНІ!"]="Best regards, X100 Cyber Corps TEAM! Glory to UKRAINE!"
 )
 
 export localization
