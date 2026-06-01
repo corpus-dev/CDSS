@@ -40,7 +40,7 @@ The installer installs the base packages `dialog`, `git`, `curl`, `sudo`, checks
 cdss
 ```
 
-Starts the interactive menu, checks for updates, and applies the configuration patch.
+Starts the interactive menu, checks for updates, applies the configuration patch, and automatically rotates `/var/log/cdss.log` (above 300 MB).
 
 ```bash
 cdss --lang en
@@ -58,7 +58,7 @@ Automatically installs protection, the firewall backend, DISTRESS, and on suppor
 cdss --restore
 ```
 
-Stops active services, backs up `EnvironmentFile`, safely removes the current installation, downloads the current `install.sh`, reinstalls CDSS, and restores the configuration.
+Stops active services, backs up `EnvironmentFile` with SHA256 verification, safely removes the current installation, downloads the current `install.sh`, reinstalls CDSS, and restores the configuration.
 
 ```bash
 cdss config
@@ -70,7 +70,7 @@ Prints the current `services/EnvironmentFile`.
 cdss --uninstall
 ```
 
-Stops `mhddos`, `distress`, and `x100`, disables autostart, removes systemd service files, removes `/usr/local/bin/cdss`, and deletes the installation directory after safe-path checks.
+Stops `mhddos`, `distress`, and `x100`, disables autostart, removes all CDSS cron entries, removes systemd service files, removes `/usr/local/bin/cdss`, and deletes the installation directory after safe-path checks.
 
 ## Main Menu
 
@@ -101,11 +101,15 @@ Main configuration file:
 
 It contains these sections:
 
-- `[mhddos]` - `user-id`, `lang`, `copies`, `threads`, `proxies`, `ifaces`, `use-my-ip`, `extra-key`, `source`, `cron-to-run`, `cron-to-stop`.
-- `[distress]` - `user-id`, `use-my-ip`, `use-tor`, `concurrency`, `interface`, flood-related options, `proxies-path`, `source`, `cron-to-run`, `cron-to-stop`.
-- `[x100]` - `itArmyUserId`, `initialDistressScale`, `ignoreBundledFreeVpn`, `cron-to-run`, `cron-to-stop`.
+- `[mhddos]` - `user-id` (Corpus ID), `lang`, `copies`, `threads`, `proxies`, `ifaces`, `use-my-ip`, `extra-key`, `source`, `cron-to-run`, `cron-to-stop`.
+- `[distress]` - `user-id` (Corpus ID), `use-my-ip`, `use-tor`, `concurrency`, `interface`, flood-related options, `proxies-path`, `source`, `cron-to-run`, `cron-to-stop`.
+- `[x100]` - `itArmyUserId` (Corpus ID), `initialDistressScale`, `ignoreBundledFreeVpn`, `cron-to-run`, `cron-to-stop`.
 
 The settings menu updates this file and regenerates the related service-file `ExecStart`.
+
+### Getting a Corpus ID
+
+Use the Telegram bot to obtain a Corpus ID: [Corpus Statistics Bot](https://t.me/corps_statistics_bot)
 
 ## Autostart And Scheduling
 
@@ -159,7 +163,13 @@ The repository includes:
 bash release_checklist.sh
 ```
 
-It checks the platform matrix, absence of a hardcoded package manager, README support tables, and Bash syntax for key files.
+It checks the platform matrix, `privileges.sh` presence, absence of a hardcoded package manager, README support tables, service security hardening, and Bash syntax for key files.
+
+```bash
+bash scripts/check.sh
+```
+
+Checks syntax (`bash -n`) of all shell files and helper function coverage.
 
 ## Troubleshooting
 

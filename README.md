@@ -40,7 +40,7 @@ curl -sL https://raw.githubusercontent.com/corpus-dev/CDSS/main/install.sh | sud
 cdss
 ```
 
-Запускає інтерактивне меню, перевіряє оновлення та застосовує патч конфігурації.
+Запускає інтерактивне меню, перевіряє оновлення, застосовує патч конфігурації та автоматично ротує лог `/var/log/cdss.log` (понад 300 МБ).
 
 ```bash
 cdss --lang en
@@ -58,7 +58,7 @@ cdss --auto-install
 cdss --restore
 ```
 
-Зупиняє активні служби, зберігає `EnvironmentFile`, безпечно видаляє поточну інсталяцію, завантажує актуальний `install.sh`, перевстановлює CDSS і відновлює конфігурацію.
+Зупиняє активні служби, зберігає `EnvironmentFile` з перевіркою SHA256, безпечно видаляє поточну інсталяцію, завантажує актуальний `install.sh`, перевстановлює CDSS і відновлює конфігурацію.
 
 ```bash
 cdss config
@@ -70,7 +70,7 @@ cdss config
 cdss --uninstall
 ```
 
-Зупиняє `mhddos`, `distress`, `x100`, вимикає автозапуск, видаляє systemd service-файли, symlink `/usr/local/bin/cdss` і директорію встановлення після перевірки безпечного шляху.
+Зупиняє `mhddos`, `distress`, `x100`, вимикає автозапуск, видаляє всі CDSS-записи з cron, видаляє systemd service-файли, symlink `/usr/local/bin/cdss` і директорію встановлення після перевірки безпечного шляху.
 
 ## Головне Меню
 
@@ -101,11 +101,15 @@ CDSS має чотири основні розділи:
 
 У ньому є секції:
 
-- `[mhddos]` - `user-id`, `lang`, `copies`, `threads`, `proxies`, `ifaces`, `use-my-ip`, `extra-key`, `source`, `cron-to-run`, `cron-to-stop`.
-- `[distress]` - `user-id`, `use-my-ip`, `use-tor`, `concurrency`, `interface`, flood-параметри, `proxies-path`, `source`, `cron-to-run`, `cron-to-stop`.
-- `[x100]` - `itArmyUserId`, `initialDistressScale`, `ignoreBundledFreeVpn`, `cron-to-run`, `cron-to-stop`.
+- `[mhddos]` - `user-id` (Corpus ID), `lang`, `copies`, `threads`, `proxies`, `ifaces`, `use-my-ip`, `extra-key`, `source`, `cron-to-run`, `cron-to-stop`.
+- `[distress]` - `user-id` (Corpus ID), `use-my-ip`, `use-tor`, `concurrency`, `interface`, flood-параметри, `proxies-path`, `source`, `cron-to-run`, `cron-to-stop`.
+- `[x100]` - `itArmyUserId` (Corpus ID), `initialDistressScale`, `ignoreBundledFreeVpn`, `cron-to-run`, `cron-to-stop`.
 
 Меню налаштувань оновлює цей файл і регенерує відповідний `ExecStart` у service-файлі.
+
+### Отримання Corpus ID
+
+Для отримання Corpus ID скористайтесь Telegram ботом: [Corpus Statistics Bot](https://t.me/corps_statistics_bot)
 
 ## Автозапуск І Розклад
 
@@ -159,7 +163,13 @@ CDSS перевіряє `version.txt` у GitHub і зберігає timestamp о
 bash release_checklist.sh
 ```
 
-Скрипт перевіряє platform matrix, відсутність жорстко заданого package manager, наявність support table у README, і синтаксис ключових Bash-файлів.
+Скрипт перевіряє platform matrix, наявність `privileges.sh`, відсутність жорстко заданого package manager, наявність support table у README, безпеку сервісів та синтаксис ключових Bash-файлів.
+
+```bash
+bash scripts/check.sh
+```
+
+Перевіряє синтаксис (`bash -n`) усіх shell-файлів та coverage допоміжних функцій.
 
 ## Troubleshooting
 
