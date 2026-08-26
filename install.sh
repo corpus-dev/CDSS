@@ -194,6 +194,11 @@ else
     exit 1
   fi
 
+  sudo_or_root chown -R cdss:cdss "$WORKING_DIR"
+  if ! sudo_or_root git config --global --get-all safe.directory 2>/dev/null | grep -qx -- "$WORKING_DIR"; then
+    sudo_or_root git config --global --add safe.directory "$WORKING_DIR" 2>/dev/null || true
+  fi
+
   source "$WORKING_DIR/utils/definitions.sh"
   source "$WORKING_DIR/utils/datapatch.sh"
   apply_patch "$WORKING_DIR/services/EnvironmentFile"

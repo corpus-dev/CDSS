@@ -104,17 +104,59 @@ update_cdss() {
     return 1
   fi
 
-  if ! cd "${SCRIPT_DIR}" && git pull --all 2>&1; then
-    echo -e "${RED}$(trans "git pull зазнав помилки. Restore (поки) не запущено.")${NC}"
-    echo -e "${RED}$(trans "Спробуйте оновити вручну: git pull")${NC}"
-    return 1
+  if ! { cd "${SCRIPT_DIR}" && git pull --all 2>&1; }; then
+    local local_changed upstream_changed f resolved=0
+    local_changed=$(git diff --name-only 2>/dev/null)
+    upstream_changed=$(git diff --name-only HEAD origin/main 2>/dev/null)
+    for f in $local_changed; do
+      if printf '%s\n' "$upstream_changed" | grep -qx -- "$f"; then
+        git checkout -- "$f" 2>/dev/null && resolved=1 || true
+      fi
+    done
+    if [[ "$resolved" -eq 1 ]] && git pull --all 2>&1; then
+      :
+    else
+      echo -e "${RED}$(trans "git pull зазнав помилки. Restore (поки) не запущено.")${NC}"
+      echo -e "${RED}$(trans "Спробуйте оновити вручну: git pull")${NC}"
+      return 1
+    fi
   fi
+
+  if [[ -f "${SCRIPT_DIR}/bin/cdss" ]]; then
+    sudo_or_root chmod +x "${SCRIPT_DIR}/bin/cdss" 2>/dev/null || true
+  fi
+
+  if id cdss >/dev/null 2>&1; then
+    sudo_or_root chown -R cdss:cdss "${SCRIPT_DIR}" 2>/dev/null || true
+    if ! sudo_or_root git config --global --get-all safe.directory 2>/dev/null | grep -qx -- "${SCRIPT_DIR}"; then
+      sudo_or_root git config --global --add safe.directory "${SCRIPT_DIR}" 2>/dev/null || true
+    fi
+  fi
+
+  local svc_file
+  for svc_file in "${SCRIPT_DIR}/services/mhddos.service" "${SCRIPT_DIR}/services/distress.service"; do
+    [[ -f "$svc_file" ]] || continue
+    if ! grep -q '^ReadWritePaths=' "$svc_file"; then
+      sed -i "/^\[Install\]/i ReadWritePaths=${SCRIPT_DIR} /var/log /tmp" "$svc_file" 2>/dev/null || true
+    elif ! grep -q "^ReadWritePaths=.*${SCRIPT_DIR}" "$svc_file"; then
+      sed -i "s|^ReadWritePaths=|ReadWritePaths=${SCRIPT_DIR} |" "$svc_file" 2>/dev/null || true
+    fi
+    if ! grep -q '^WorkingDirectory=' "$svc_file"; then
+      sed -i "/^\[Install\]/i WorkingDirectory=${SCRIPT_DIR}" "$svc_file" 2>/dev/null || true
+    fi
+  done
 
   local init_system
   init_system=$(get_init_system)
 
   if [[ "$init_system" == "systemd" ]]; then
-    echo -e "${GREEN}$(trans "Перевірка systemd service-файлів")${NC}"
+    service_daemon_reload
+    local svc
+    for svc in mhddos distress x100; do
+      if service_is_active "$svc"; then
+        service_restart "$svc"
+      fi
+    done
   fi
 
   echo -e "${GREEN}$(trans "CDSS успішно оновлено")${NC}"

@@ -325,8 +325,13 @@ regenerate_distress_service_file() {
     local tmp_svc
     tmp_svc=$(mktemp)
     while IFS= read -r line; do
+      if [[ "$line" == "[Install]" ]] && ! grep -q '^WorkingDirectory=' "$tmp_svc"; then
+        echo "WorkingDirectory=${SCRIPT_DIR}" >> "$tmp_svc"
+      fi
       if [[ "$line" == ExecStart=* ]]; then
         echo "ExecStart=$start" >> "$tmp_svc"
+      elif [[ "$line" == ReadWritePaths=* ]]; then
+        echo "ReadWritePaths=${SCRIPT_DIR} /var/log /tmp" >> "$tmp_svc"
       else
         echo "$line" >> "$tmp_svc"
       fi
