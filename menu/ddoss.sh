@@ -10,7 +10,7 @@ update_env_user_id() {
   fi
 
   if [[ ! -f "$environment_file" ]]; then
-    cdss_dialog "$(trans "Файл EnvironmentFile не знайдено: \$environment_file")"
+    cdss_dialog "$(trans "Файл EnvironmentFile не знайдено: $environment_file")"
     return 1
   fi
 
