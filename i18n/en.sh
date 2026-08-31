@@ -230,6 +230,7 @@ declare -gA localization=(
   ["Встановлюємо %s"]="Installing %s",
   ["Невідомий пакет менеджер: %s"]="Unknown package manager: %s",
   ["CDSS вже встановлено. Запускаємо оновлення..."]="CDSS is already installed. Running update...",
+  ["Звичайне оновлення не вдалося. Запускаємо bootstrap-синхронізацію..."]="Regular update failed. Running bootstrap synchronization...",
   ["Клонуємо CDSS..."]="Cloning CDSS...",
   ["git clone CDSS не вдався."]="git clone CDSS failed.",
   ["git checkout main не вдався."]="git checkout main failed.",

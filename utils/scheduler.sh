@@ -19,7 +19,7 @@ validate_cron_schedule() {
   read -r minute hour day month weekday <<< "$schedule"
 
   for field in "$minute" "$hour" "$day" "$month" "$weekday"; do
-    if [[ ! "$field" =~ ^([0-9]+|\*|[0-9]+-[0-9]+|[0-9]+\/[0-9]+|([0-9]+,)+[0-9]+)$ ]]; then
+    if [[ ! "$field" =~ ^([0-9]+|\*|[0-9]+-[0-9]+|(\*|[0-9]+-[0-9]+)\/[0-9]+|([0-9]+,)+[0-9]+)$ ]]; then
       return 1
     fi
   done

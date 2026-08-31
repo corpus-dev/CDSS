@@ -321,6 +321,35 @@ test_ensure_cdss_update_cron() {
   unset -f cron_has_job cron_install_job
 }
 
+test_ensure_git_update_config() {
+  if ! command -v git >/dev/null 2>&1; then
+    echo "SKIP: git not available"
+    return 0
+  fi
+
+  local tmp="$TMP_DIR/git-update-config"
+  mkdir -p "$tmp"
+
+  local old_git_config_global="${GIT_CONFIG_GLOBAL:-}"
+  local old_git_config_system="${GIT_CONFIG_SYSTEM:-}"
+  export GIT_CONFIG_GLOBAL="$tmp/gitconfig"
+  export GIT_CONFIG_SYSTEM="/dev/null"
+
+  assert_success ensure_git_update_config
+  assert_eq "true" "$(git config --global pull.autostash)" "pull.autostash enabled"
+
+  if [[ -n "$old_git_config_global" ]]; then
+    export GIT_CONFIG_GLOBAL="$old_git_config_global"
+  else
+    unset GIT_CONFIG_GLOBAL
+  fi
+  if [[ -n "$old_git_config_system" ]]; then
+    export GIT_CONFIG_SYSTEM="$old_git_config_system"
+  else
+    unset GIT_CONFIG_SYSTEM
+  fi
+}
+
 test_module_paths
 test_validate_service_file
 test_service_file_set_directive
@@ -330,6 +359,7 @@ test_ensure_module_runtime_permissions
 test_repair_runtime_non_systemd
 test_ensure_canonical_update_sources
 test_ensure_cdss_update_cron
+test_ensure_git_update_config
 test_force_sync_cdss
 
 echo "tests/test_runtime_environment.sh: OK"

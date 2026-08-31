@@ -116,6 +116,9 @@ check "updater merge_environment_file defined" grep -q "merge_environment_file()
 check "updater uses sudo_or_root git reset" grep -q "sudo_or_root git reset --hard FETCH_HEAD" utils/updater.sh
 check "updater uses canonical upstream URL" grep -q "CDSS_GIT_URL:-https://github.com/corpus-dev/CDSS.git" utils/updater.sh
 check "updater ensures canonical update sources" grep -q "ensure_canonical_update_sources()" utils/updater.sh
+check "updater ensures git update config" grep -q "ensure_git_update_config()" utils/updater.sh
+check "install.sh enables pull.autostash" grep -q "pull.autostash" install.sh
+check "cron validator accepts star step" bash -c 'source utils/scheduler.sh; validate_cron_schedule "*/5 * * * *"'
 check "runtime installs update-only cron" grep -q "cdss_update_only" utils/runtime_environment.sh
 
 echo ""

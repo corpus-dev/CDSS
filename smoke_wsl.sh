@@ -31,6 +31,7 @@ echo "support=$(get_platform_support_level)"
 
 apply_localization --lang=en >/dev/null
 validate_cron_schedule "0 20 * * *"
+validate_cron_schedule "*/5 * * * *"
 is_not_arm_arch || true
 
 declare -F transf >/dev/null

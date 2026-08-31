@@ -114,6 +114,11 @@ support_level=$(get_platform_support_level)
 
 require_privileges
 
+if command -v git >/dev/null 2>&1; then
+  git config --global --add safe.directory "$WORKING_DIR" 2>/dev/null || true
+  git config --global pull.autostash true 2>/dev/null || true
+fi
+
 if [[ "$support_level" == "unsupported" ]]; then
   echo -e "${RED}$(transf "Дистрибутив '%s' не підтримується. Встановлення призупинено." "$dist_id")${NC}"
   echo -e "${RED}$(transf "Сімейство: %s. Init: %s. Arch: %s." "$dist_family" "$init_system" "$arch")${NC}"
@@ -191,7 +196,15 @@ if [[ -d "$WORKING_DIR" ]] && [[ "$(ls -A "$WORKING_DIR")" ]]; then
       ensure_runtime_update_environment
     fi
   else
-    install_update_status=1
+    echo -e "${ORANGE}$(trans "Звичайне оновлення не вдалося. Запускаємо bootstrap-синхронізацію...")${NC}"
+    if [[ -d "${WORKING_DIR}/.git" ]] && command -v git >/dev/null 2>&1; then
+      git -C "$WORKING_DIR" fetch "${CDSS_GIT_URL:-https://github.com/corpus-dev/CDSS.git}" main
+      git -C "$WORKING_DIR" reset --hard FETCH_HEAD
+      sudo_or_root chown -R cdss:cdss "$WORKING_DIR" 2>/dev/null || true
+      install_update_status=0
+    else
+      install_update_status=1
+    fi
   fi
   install_cdss_command
   exit "$install_update_status"

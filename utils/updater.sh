@@ -135,6 +135,12 @@ log_update_sources_event() {
   fi
 }
 
+ensure_git_update_config() {
+  command -v git >/dev/null 2>&1 || return 0
+  sudo_or_root git config --global pull.autostash true 2>/dev/null || true
+  return 0
+}
+
 ensure_canonical_update_sources() {
   local upstream_url
   upstream_url=$(get_cdss_upstream_url)
@@ -143,6 +149,7 @@ ensure_canonical_update_sources() {
   [[ -d "${SCRIPT_DIR}/.git" ]] || return 0
 
   ensure_git_safe_directory "${SCRIPT_DIR}"
+  ensure_git_update_config
 
   local origin_url
   origin_url=$(cd "${SCRIPT_DIR}" && sudo_or_root git remote get-url origin 2>/dev/null) || true
