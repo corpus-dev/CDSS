@@ -401,17 +401,17 @@ ensure_cron_running() {
   fi
 
   if ! platform_service_is_active "$cron_svc"; then
-    echo -e "${GREEN}$(trans "Запуск cron service: $cron_svc")${NC}"
+    echo -e "${GREEN}$(transf "Запуск cron service: %s" "$cron_svc")${NC}"
     if platform_service_start "$cron_svc"; then
-      echo -e "${GREEN}$(trans "Cron service '$cron_svc' запущено")${NC}"
+      echo -e "${GREEN}$(transf "Cron service '%s' запущено" "$cron_svc")${NC}"
       return 0
     else
-      echo -e "${RED}$(trans "Не вдалося запустити cron service '$cron_svc'. Перевірте вручну.")${NC}"
+      echo -e "${RED}$(transf "Не вдалося запустити cron service '%s'. Перевірте вручну." "$cron_svc")${NC}"
       return 1
     fi
   fi
 
-  echo -e "${GREEN}$(trans "Cron service '$cron_svc' вже активний")${NC}"
+  echo -e "${GREEN}$(transf "Cron service '%s' вже активний" "$cron_svc")${NC}"
   return 0
 }
 

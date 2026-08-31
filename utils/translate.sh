@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 apply_localization() {
   local PATH_TO_LOCALIZATION="$SCRIPT_DIR/i18n"
   local file_to_include=""
@@ -53,4 +54,19 @@ trans() {
   else
     echo "${localization[$1]}"
   fi
+}
+
+transf() {
+  local template="$1"
+  shift
+  local text="${localization[$template]:-$template}"
+  local arg
+
+  for arg in "$@"; do
+    if [[ "$text" == *"%s"* ]]; then
+      text="${text/"%s"/$arg}"
+    fi
+  done
+
+  echo "$text"
 }

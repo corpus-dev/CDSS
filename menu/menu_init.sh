@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 set -uo pipefail
 
 display_menu() {

@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 set -uo pipefail
 
 validate_cron_schedule() {
@@ -131,7 +132,7 @@ cron_install_job() {
   local command="$3"
 
   if ! validate_cron_schedule "$schedule"; then
-    cdss_dialog "$(trans "Некоректний cron-вираз: $schedule")"
+    cdss_dialog "$(transf "Некоректний cron-вираз: %s" "$schedule")"
     return 1
   fi
 

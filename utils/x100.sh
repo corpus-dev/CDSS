@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 set -uo pipefail
 
 x100_run() {
@@ -328,7 +329,7 @@ install_x100() {
     fi
 
     rm -f "$archive"
-    chown -R cdss:cdss "$SCRIPT_DIR/x100-for-docker"
+    sudo_or_root chown -R cdss:cdss "$SCRIPT_DIR/x100-for-docker"
 
     if [[ ! -d "$SCRIPT_DIR/x100-for-docker" ]]; then
       cdss_dialog "$(trans "Директорія x100-for-docker не знайдена після unzip")"
@@ -342,9 +343,9 @@ install_x100() {
 
     cd "$SCRIPT_DIR/x100-for-docker" || return 1
 
-    find "./" -type d -print0 | xargs -0 chmod a+rx
-    find "./" -type f -print0 | xargs -0 chmod a+r
-    find "./" -type f -name "*.bash" -print0 | xargs -0 chmod a+x
+    sudo_or_root find "$SCRIPT_DIR/x100-for-docker" -type d -exec chmod a+rx {} +
+    sudo_or_root find "$SCRIPT_DIR/x100-for-docker" -type f -exec chmod a+r {} +
+    sudo_or_root find "$SCRIPT_DIR/x100-for-docker" -type f -name "*.bash" -exec chmod a+x {} +
 
     if [[ ! -d "$SCRIPT_DIR/x100-for-docker/for-macOS-and-Linux-hosts" ]]; then
       cdss_dialog "$(trans "for-macOS-and-Linux-hosts не знайдено в архіві")"

@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 set -uo pipefail
 
 extend_ports() {
@@ -21,6 +22,8 @@ extend_ports() {
   echo "$port_range_string" > "$tmp_file"
 
 sudo_or_root mv -f "$tmp_file" "$sysctl_d_file"
+sudo_or_root chown root:root "$sysctl_d_file" 2>/dev/null || true
+sudo_or_root chmod 644 "$sysctl_d_file" 2>/dev/null || true
 sudo_or_root sysctl --system >/dev/null 2>&1 || true
 
   confirm_dialog "$(trans "Порти успішно розширено")"

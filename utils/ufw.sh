@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 set -uo pipefail
 
 get_firewall_display_name() {
@@ -45,14 +46,14 @@ firewall_is_active() {
 install_ufw() {
   local firewall_name
   firewall_name=$(get_firewall_display_name)
-  cdss_dialog "$(trans "Буде встановлено фаєрвол $firewall_name. Він потрібен, щоб закрити вхідні підключення за замовчуванням і залишити дозволеним SSH-доступ.")"
+  cdss_dialog "$(transf "Буде встановлено фаєрвол %s. Він потрібен, щоб закрити вхідні підключення за замовчуванням і залишити дозволеним SSH-доступ." "$firewall_name")"
 
   if ! install_firewall_backend; then
     cdss_dialog "$(trans "Не вдалося встановити фаєрвол backend. Спробуйте вручну.")${NC}"
     return 1
   fi
 
-  confirm_dialog "$(trans "Фаєрвол $firewall_name встановлено")"
+  confirm_dialog "$(transf "Фаєрвол %s встановлено" "$firewall_name")"
 }
 
 ufw_is_active() {
@@ -63,7 +64,7 @@ enable_ufw() {
   local backend firewall_name
   backend=$(get_firewall_backend 2>/dev/null || echo "unknown")
   firewall_name=$(get_firewall_display_name)
-  cdss_dialog "$(trans "Увімкнення фаєрвола $firewall_name активує захист на старті системи.")"
+  cdss_dialog "$(transf "Увімкнення фаєрвола %s активує захист на старті системи." "$firewall_name")"
   case "$backend" in
     ufw)
       sudo_or_root ufw --force enable
@@ -77,14 +78,14 @@ enable_ufw() {
       return 1
       ;;
   esac
-  confirm_dialog "$(trans "Фаєрвол $firewall_name успішно увімкнено")"
+  confirm_dialog "$(transf "Фаєрвол %s успішно увімкнено" "$firewall_name")"
 }
 
 disable_ufw() {
   local backend firewall_name
   backend=$(get_firewall_backend 2>/dev/null || echo "unknown")
   firewall_name=$(get_firewall_display_name)
-  cdss_dialog "$(trans "Вимкнення фаєрвола $firewall_name прибере активний мережевий захист. SSH-сесія не повинна обірватися, але сервер стане відкритішим.")"
+  cdss_dialog "$(transf "Вимкнення фаєрвола %s прибере активний мережевий захист. SSH-сесія не повинна обірватися, але сервер стане відкритішим." "$firewall_name")"
   case "$backend" in
     ufw)
       sudo_or_root ufw --force disable
@@ -98,7 +99,7 @@ disable_ufw() {
       return 1
       ;;
   esac
-  confirm_dialog "$(trans "Фаєрвол $firewall_name успішно вимкнено")"
+  confirm_dialog "$(transf "Фаєрвол %s успішно вимкнено" "$firewall_name")"
 }
 
 ufw_installed() {
@@ -109,13 +110,13 @@ configure_ufw() {
   local firewall_name
   firewall_name=$(get_firewall_display_name)
   if ! firewall_installed; then
-    confirm_dialog "$(trans "Фаєрвол $firewall_name не встановлений, будь ласка встановіть і спробуйте знову")"
+    confirm_dialog "$(transf "Фаєрвол %s не встановлений, будь ласка встановіть і спробуйте знову" "$firewall_name")"
   else
-    cdss_dialog "$(trans "Буде налаштовано фаєрвол $firewall_name: deny incoming, allow outgoing, дозволити SSH порт 22 і активувати правила.")"
+    cdss_dialog "$(transf "Буде налаштовано фаєрвол %s: deny incoming, allow outgoing, дозволити SSH порт 22 і активувати правила." "$firewall_name")"
     if ! configure_firewall_backend; then
-      confirm_dialog "$(trans "Не вдалося налаштувати фаєрвол $firewall_name")"
+      confirm_dialog "$(transf "Не вдалося налаштувати фаєрвол %s" "$firewall_name")"
       return 1
     fi
-    confirm_dialog "$(trans "Фаєрвол $firewall_name налаштовано і активовано")"
+    confirm_dialog "$(transf "Фаєрвол %s налаштовано і активовано" "$firewall_name")"
   fi
 }

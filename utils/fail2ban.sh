@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 set -uo pipefail
 
 install_fail2ban() {
@@ -112,6 +113,7 @@ configure_fail2ban() {
       echo "bantime = 600" >> "$tmp_conf"
 
       sudo_or_root mv -f "$tmp_conf" "$cdss_conf"
+      sudo_or_root chown root:root "$cdss_conf" 2>/dev/null || true
       sudo_or_root chmod 644 "$cdss_conf"
     }
     if ! configure >/dev/null 2>&1; then

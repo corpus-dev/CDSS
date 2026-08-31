@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 set -uo pipefail
 
 install_mhddos() {
@@ -225,7 +226,7 @@ regenerate_mhddos_service_file() {
       if [[ "$line" == ExecStart=* ]]; then
         echo "ExecStart=$start" >> "$tmp_svc"
       elif [[ "$line" == ReadWritePaths=* ]]; then
-        echo "ReadWritePaths=${SCRIPT_DIR} /var/log /tmp" >> "$tmp_svc"
+        echo "ReadWritePaths=${SCRIPT_DIR}/bin /var/log /tmp" >> "$tmp_svc"
       else
         echo "$line" >> "$tmp_svc"
       fi

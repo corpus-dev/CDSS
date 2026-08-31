@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 set -uo pipefail
 
 security_settings() {
@@ -11,7 +12,7 @@ security_settings() {
 
     case "$res" in
     "$(trans "Встановлення захисту")")
-      cdss_dialog "$(trans "CDSS встановить рекомендований фаєрвол для цієї системи ($firewall_name) та Fail2ban для SSH brute-force захисту.")"
+      cdss_dialog "$(transf "CDSS встановить рекомендований фаєрвол для цієї системи (%s) та Fail2ban для SSH brute-force захисту." "$firewall_name")"
       install_ufw
       install_fail2ban
       ;;

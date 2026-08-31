@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 set -uo pipefail
 
 show_log_tail() {
@@ -9,12 +10,12 @@ show_log_tail() {
   fi
 
   if [[ ! -f "$log_file" ]]; then
-    cdss_dialog "$(trans "Лог-файл не знайдено: $log_file")"
+    cdss_dialog "$(transf "Лог-файл не знайдено: %s" "$log_file")"
     return 1
   fi
 
   if [[ ! -r "$log_file" ]]; then
-    cdss_dialog "$(trans "Лог-файл недоступний для читання: $log_file")"
+    cdss_dialog "$(transf "Лог-файл недоступний для читання: %s" "$log_file")"
     return 1
   fi
 
@@ -43,7 +44,7 @@ create_symlink() {
   init_system=$(get_init_system)
 
   if [[ "$init_system" != "systemd" ]]; then
-    cdss_dialog "$(trans "Створення symlink працює тільки для systemd. Поточна init-система: $init_system")"
+    cdss_dialog "$(transf "Створення symlink працює тільки для systemd. Поточна init-система: %s" "$init_system")"
     return 1
   fi
 
@@ -53,7 +54,7 @@ create_symlink() {
   for svc in "${service_files[@]}"; do
     local service_path="$SCRIPT_DIR/services/${svc}.service"
     if [[ ! -f "$service_path" ]]; then
-      cdss_dialog "$(trans "Сервісний файл відсутній: $service_path")"
+      cdss_dialog "$(transf "Сервісний файл відсутній: %s" "$service_path")"
       return 1
     fi
   done
@@ -126,7 +127,8 @@ get_ddoss_status() {
         lsb_version="$(. /etc/os-release && echo "$VERSION_ID")"
         lsb_id="$(. /etc/os-release && echo "$ID")"
 
-        if [[ "$lsb_id" == "ubuntu" ]] && [[ "$lsb_version" < 19* ]]; then
+        local lsb_major="${lsb_version%%.*}"
+        if [[ "$lsb_id" == "ubuntu" ]] && [[ "$lsb_major" =~ ^[0-9]+$ ]] && (( 10#$lsb_major < 19 )); then
           if command -v journalctl >/dev/null 2>&1; then
             journalctl -n 20 -u "$service.service" --no-pager
           else

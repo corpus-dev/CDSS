@@ -28,39 +28,9 @@ fi
 require_privileges
 
 export TOOL_DIR="$SCRIPT_DIR/bin"
+CDSS_UPDATED=0
 
-reload_runtime_files() {
-  local runtime_files=(
-    "$SCRIPT_DIR/utils/platform_matrix.sh"
-    "$SCRIPT_DIR/utils/definitions.sh"
-    "$SCRIPT_DIR/utils/dialog.sh"
-    "$SCRIPT_DIR/utils/datapatch.sh"
-    "$SCRIPT_DIR/utils/updater.sh"
-    "$SCRIPT_DIR/utils/scheduler.sh"
-    "$SCRIPT_DIR/utils/port-extending.sh"
-    "$SCRIPT_DIR/utils/fail2ban.sh"
-    "$SCRIPT_DIR/utils/ufw.sh"
-    "$SCRIPT_DIR/utils/mhddos.sh"
-    "$SCRIPT_DIR/utils/distress.sh"
-    "$SCRIPT_DIR/utils/x100.sh"
-    "$SCRIPT_DIR/menu/menu_init.sh"
-    "$SCRIPT_DIR/menu/ddos_tool_managment.sh"
-    "$SCRIPT_DIR/menu/ddoss.sh"
-    "$SCRIPT_DIR/menu/autoloading.sh"
-    "$SCRIPT_DIR/menu/security_configuration.sh"
-    "$SCRIPT_DIR/menu/security_settings.sh"
-    "$SCRIPT_DIR/menu/main_menu.sh"
-  )
-  local file
-
-  for file in "${runtime_files[@]}"; do
-    if [[ -f "$file" ]]; then
-      source "$file"
-    else
-      echo -e "${RED}$(trans "Не знайдено файл '$file'.")${NC}"
-    fi
-  done
-}
+source "$SCRIPT_DIR/utils/updater.sh"
 
 reload_runtime_files
 
@@ -84,17 +54,22 @@ if [ "${1:-}" = "--auto-install" ]; then
   reload_runtime_files
   apply_patch "${SCRIPT_DIR}/services/EnvironmentFile"
 
+  if [[ "$CDSS_UPDATED" == "1" ]]; then
+    regenerate_module_service_files
+  fi
+  ensure_runtime_update_environment
+
   dist_id=$(get_distribution_id)
   dist_family=$(get_distribution_family)
   support_level=$(get_platform_support_level)
 
   if [[ "$support_level" == "unsupported" ]]; then
-    echo -e "${RED}$(trans "Дистрибутив '$dist_id' не підтримується. Авто-інсталяція призупинена.")${NC}"
+    echo -e "${RED}$(transf "Дистрибутив '%s' не підтримується. Авто-інсталяція призупинена." "$dist_id")${NC}"
     exit 1
   fi
 
   if [[ "$support_level" == "partial" ]]; then
-    echo -e "${ORANGE}$(trans "Дистрибутив '$dist_id' має partial support. Деякі функції можуть бути обмежені.")${NC}"
+    echo -e "${ORANGE}$(transf "Дистрибутив '%s' має partial support. Деякі функції можуть бути обмежені." "$dist_id")${NC}"
   fi
 
   install_fail2ban
@@ -163,7 +138,7 @@ elif [ "${1:-}" = "--restore" ]; then
   install_exit=$?
 
   if [[ $install_exit -ne 0 ]]; then
-    echo -e "${RED}$(trans "Інсталятор завершився з помилкою. Backup збережено: $backup_file")${NC}"
+    echo -e "${RED}$(transf "Інсталятор завершився з помилкою. Backup збережено: %s" "$backup_file")${NC}"
     rm -f "$tmp_install" 2>/dev/null
     exit 1
   fi
@@ -217,19 +192,31 @@ elif [ "${1:-}" = "--uninstall" ]; then
   truncate_large_cdss_log
 
   if ! safe_remove_cdss_dir "${SCRIPT_DIR}"; then
-    echo -e "${RED}$(trans "Не вдалося видалити інсталяцію. Backup збережено: $backup_file")${NC}"
+    echo -e "${RED}$(transf "Не вдалося видалити інсталяцію. Backup збережено: %s" "$backup_file")${NC}"
     echo -e "${RED}$(trans "CDSS все ще встановлено. Спробуйте вручну.")${NC}"
     exit 1
   fi
 
   if [[ -f "$backup_file" ]]; then
-    echo -e "${GREEN}$(trans "Backup збережено у: $backup_file")${NC}"
+    echo -e "${GREEN}$(transf "Backup збережено у: %s" "$backup_file")${NC}"
   fi
 
   echo -e "${GREEN}$(trans "CDSS успішно видалено")${NC}"
+elif [ "${1:-}" = "--repair-runtime" ]; then
+  truncate_large_cdss_log
+  if ! repair_runtime; then
+    exit 1
+  fi
+  exit 0
 else
   check_updates
   reload_runtime_files
   apply_patch "${SCRIPT_DIR}/services/EnvironmentFile"
+
+  if [[ "$CDSS_UPDATED" == "1" ]]; then
+    regenerate_module_service_files
+  fi
+  ensure_runtime_update_environment
+
   main_menu
 fi

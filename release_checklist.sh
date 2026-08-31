@@ -95,6 +95,24 @@ check "firewalld keeps SSH open" grep -q -- "--add-service=ssh" utils/platform_m
 
 # 17. Unit tests
 check "core tests" bash tests/test_core.sh
+check "runtime environment tests" bash tests/test_runtime_environment.sh
+check "i18n coverage" bash tests/i18n_coverage.sh
+
+# 18. Runtime environment and update pipeline
+check "runtime_environment.sh exists" test -f utils/runtime_environment.sh
+check "transf defined" grep -q "transf()" utils/translate.sh
+check "mhddos template canonical ReadWritePaths" grep -q "^ReadWritePaths=/opt/cybercorps/bin /var/log /tmp" services/mhddos.service
+check "distress template canonical ReadWritePaths" grep -q "^ReadWritePaths=/opt/cybercorps/bin /var/log /tmp" services/distress.service
+check "x100 template canonical ReadWritePaths" grep -q "^ReadWritePaths=/opt/cybercorps/x100-for-docker /var/log /tmp" services/x100.service
+check "mhddos regenerate canonical ReadWritePaths" grep -q 'ReadWritePaths=${SCRIPT_DIR}/bin /var/log /tmp' utils/mhddos.sh
+check "distress regenerate canonical ReadWritePaths" grep -q 'ReadWritePaths=${SCRIPT_DIR}/bin /var/log /tmp' utils/distress.sh
+check "x100 regenerate canonical ReadWritePaths" grep -q 'ReadWritePaths=${SCRIPT_DIR}/x100-for-docker /var/log /tmp' utils/x100.sh
+check "bin/cdss repair-runtime mode" grep -q -- "--repair-runtime" bin/cdss
+check "bin/cdss ensure_runtime_update_environment" grep -q "ensure_runtime_update_environment" bin/cdss
+check "updater force_sync_cdss defined" grep -q "force_sync_cdss()" utils/updater.sh
+check "updater backup_module_settings defined" grep -q "backup_module_settings()" utils/updater.sh
+check "updater merge_environment_file defined" grep -q "merge_environment_file()" utils/updater.sh
+check "updater uses sudo_or_root git reset" grep -q "sudo_or_root git reset --hard origin/main" utils/updater.sh
 
 echo ""
 echo -e "Результат: ${GREEN}$PASS${NC} пройдено, ${RED}$FAIL${NC} провалено"

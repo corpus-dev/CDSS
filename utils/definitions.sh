@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 set -uo pipefail
 
 get_service_command() {
@@ -160,13 +161,13 @@ assert_safe_script_dir() {
 
   case "$check_dir" in
     /|/opt|/tmp|/root|/home|"$HOME")
-      cdss_dialog "$(trans "SCRIPT_DIR дорівнює '$check_dir'. Це занадто широко. Безпечне видалення відкладено.")"
+      cdss_dialog "$(transf "SCRIPT_DIR дорівнює '%s'. Це занадто широко. Безпечне видалення відкладено." "$check_dir")"
       return 1
       ;;
   esac
 
   if [[ ! -d "$check_dir" ]]; then
-    cdss_dialog "$(trans "Директорія '$check_dir' не існує. Безпечне видалення відкладено.")"
+    cdss_dialog "$(transf "Директорія '%s' не існує. Безпечне видалення відкладено." "$check_dir")"
     return 1
   fi
 
@@ -176,14 +177,14 @@ assert_safe_script_dir() {
 
   for req_file in "${required_files[@]}"; do
     if [[ ! -f "$check_dir/$req_file" ]]; then
-      cdss_dialog "$(trans "Очікуваний файл '$check_dir/$req_file' відсутній. SCRIPT_DIR може бути неправильним.")"
+      cdss_dialog "$(transf "Очікуваний файл '%s/%s' відсутній. SCRIPT_DIR може бути неправильним." "$check_dir" "$req_file")"
       missing=1
     fi
   done
 
   for req_dir in "${required_dirs[@]}"; do
     if [[ ! -d "$check_dir/$req_dir" ]]; then
-      cdss_dialog "$(trans "Очікувана директорія '$check_dir/$req_dir' відсутня. SCRIPT_DIR може бути неправильним.")"
+      cdss_dialog "$(transf "Очікувана директорія '%s/%s' відсутня. SCRIPT_DIR може бути неправильним." "$check_dir" "$req_dir")"
       missing=1
     fi
   done
@@ -216,7 +217,7 @@ safe_remove_path() {
       return 1
       ;;
     *)
-      cdss_dialog "$(trans "Шлях '$target_path' не в списку дозволених для видалення.")"
+      cdss_dialog "$(transf "Шлях '%s' не в списку дозволених для видалення." "$target_path")"
       return 1
       ;;
   esac
@@ -244,7 +245,7 @@ safe_remove_cdss_dir() {
   fi
 
   if ! assert_safe_script_dir "$dir_to_remove"; then
-    cdss_dialog "$(trans "Директорія '$dir_to_remove' не пройшла перевірку безпеки. Видалення відкладено.")"
+    cdss_dialog "$(transf "Директорія '%s' не пройшла перевірку безпеки. Видалення відкладено." "$dir_to_remove")"
     return 1
   fi
 
@@ -253,13 +254,13 @@ safe_remove_cdss_dir() {
 
   case "$resolved_dir" in
     /|/opt|/tmp|/root|/home|"$HOME")
-      cdss_dialog "$(trans "Resolved директорія '$resolved_dir' занадто широка. Видалення відкладено.")"
+      cdss_dialog "$(transf "Resolved директорія '%s' занадто широка. Видалення відкладено." "$resolved_dir")"
       return 1
       ;;
   esac
 
   if [[ ! -f "$resolved_dir/bin/cdss" ]]; then
-    cdss_dialog "$(trans "Файл '$resolved_dir/bin/cdss' не знайдено. Перевірте шлях.")"
+    cdss_dialog "$(transf "Файл '%s/bin/cdss' не знайдено. Перевірте шлях." "$resolved_dir")"
     return 1
   fi
 
@@ -267,11 +268,18 @@ safe_remove_cdss_dir() {
   sudo_or_root rm -rfv "$resolved_dir"
 
   if [[ -e "$resolved_dir" ]]; then
-    cdss_dialog "$(trans "Видалення '$resolved_dir' не вдалося. Директорія все ще існує.")"
+    cdss_dialog "$(transf "Видалення '%s' не вдалося. Директорія все ще існує." "$resolved_dir")"
     return 1
   fi
 
   return 0
+}
+
+ensure_config_readable() {
+  local config_file="$1"
+  if [[ -n "$config_file" && -f "$config_file" && ! -r "$config_file" ]]; then
+    sudo_or_root chmod 644 "$config_file" 2>/dev/null || true
+  fi
 }
 
 get_config_value() {
@@ -283,6 +291,8 @@ get_config_value() {
     echo ""
     return 1
   fi
+
+  ensure_config_readable "$config_file"
 
   local in_section=0
   local value=""
@@ -319,9 +329,11 @@ set_config_value() {
   local value="$4"
 
   if [[ -z "$config_file" ]] || [[ ! -f "$config_file" ]]; then
-    cdss_dialog "$(trans "Файл конфігурації '$config_file' не знайдено.")"
+    cdss_dialog "$(transf "Файл конфігурації '%s' не знайдено." "$config_file")"
     return 1
   fi
+
+  ensure_config_readable "$config_file"
 
   if [[ -z "$section" ]] || [[ -z "$key" ]]; then
     cdss_dialog "$(trans "Section або key порожні.")"
@@ -388,7 +400,7 @@ set_config_value() {
     sudo_or_root chmod "$file_mode" "$config_file" 2>/dev/null || true
   fi
   if [[ "$config_file" == *"EnvironmentFile"* ]]; then
-    sudo_or_root chmod 600 "$config_file" 2>/dev/null || true
+    sudo_or_root chmod 644 "$config_file" 2>/dev/null || true
   fi
   flock -u 200
   exec 200>&-
@@ -402,6 +414,8 @@ ensure_config_section() {
   if [[ -z "$config_file" ]] || [[ ! -f "$config_file" ]]; then
     return 1
   fi
+
+  ensure_config_readable "$config_file"
 
   if grep -q "^\[$section\]$" "$config_file"; then
     return 0
@@ -488,11 +502,11 @@ service_is_active() {
       return $?
     fi
   else
-    cdss_dialog "$(trans "Невідома init-система: $init_system. Не вдалося перевірити статус.")"
+    cdss_dialog "$(transf "Невідома init-система: %s. Не вдалося перевірити статус." "$init_system")"
     return 1
   fi
 
-  cdss_dialog "$(trans "Команда недоступна: $(command -v "$init_system" 2>/dev/null || echo "$init_system")")"
+  cdss_dialog "$(transf "Команда недоступна: %s" "$(command -v "$init_system" 2>/dev/null || echo "$init_system")")"
   return 1
 }
 
@@ -517,7 +531,7 @@ service_start() {
       return $?
     fi
   else
-    cdss_dialog "$(trans "Невідома init-система: $init_system. Не вдалося запустити сервіс.")"
+    cdss_dialog "$(transf "Невідома init-система: %s. Не вдалося запустити сервіс." "$init_system")"
     return 1
   fi
 
@@ -546,7 +560,7 @@ service_stop() {
       return $?
     fi
   else
-    cdss_dialog "$(trans "Невідома init-система: $init_system. Не вдалося зупинити сервіс.")"
+    cdss_dialog "$(transf "Невідома init-система: %s. Не вдалося зупинити сервіс." "$init_system")"
     return 1
   fi
 
@@ -575,7 +589,7 @@ service_restart() {
       return $?
     fi
   else
-    cdss_dialog "$(trans "Невідома init-система: $init_system. Не вдалося перезапустити сервіс.")"
+    cdss_dialog "$(transf "Невідома init-система: %s. Не вдалося перезапустити сервіс." "$init_system")"
     return 1
   fi
 
@@ -602,7 +616,7 @@ service_enable() {
     cdss_dialog "$(trans "runit не підтримує enable. Потрібно додати сервіс в потрібний runlevel вручну.")"
     return 1
   else
-    cdss_dialog "$(trans "Автозавантаження не підтримується на $init_system.")"
+    cdss_dialog "$(transf "Автозавантаження не підтримується на %s." "$init_system")"
     return 1
   fi
 
@@ -629,7 +643,7 @@ service_disable() {
     cdss_dialog "$(trans "runit не підтримує disable. Потрібно видалити сервіс з runlevel вручну.")"
     return 1
   else
-    cdss_dialog "$(trans "Автозавантаження не підтримується на $init_system.")"
+    cdss_dialog "$(transf "Автозавантаження не підтримується на %s." "$init_system")"
     return 1
   fi
 
@@ -651,6 +665,25 @@ service_daemon_reload() {
   return 1
 }
 
+log_cdss_event() {
+  local message="$1"
+  local log_file="/var/log/cdss.log"
+  local line
+  line="$(date '+%Y-%m-%d %H:%M:%S') [CDSS] ${message}"
+  if is_root; then
+    echo "$line" >> "$log_file" 2>/dev/null || true
+  else
+    echo "$line" | sudo_or_root tee -a "$log_file" >/dev/null 2>&1 || true
+  fi
+  return 0
+}
+
+log_cancel_event() {
+  local event="${1:-UNKNOWN}"
+  local action="${2:-cancel}"
+  log_cdss_event "cancel event: ${event} action=${action} user=$(get_real_user)"
+}
+
 service_is_enabled() {
   local service_name="$1"
   local init_system
@@ -670,7 +703,7 @@ service_is_enabled() {
     cdss_dialog "$(trans "runit не підтримує is-enabled. Потрібно перевірити runlevel вручну.")"
     return 1
   else
-    cdss_dialog "$(trans "Автозавантаження не підтримується на $init_system.")"
+    cdss_dialog "$(transf "Автозавантаження не підтримується на %s." "$init_system")"
     return 1
   fi
 
@@ -699,7 +732,7 @@ service_status() {
       return $?
     fi
   else
-    cdss_dialog "$(trans "Невідома init-система: $init_system. Не вдалося отримати статус.")"
+    cdss_dialog "$(transf "Невідома init-система: %s. Не вдалося отримати статус." "$init_system")"
     return 1
   fi
 

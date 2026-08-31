@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2218
 set -uo pipefail
 
 export GREEN='\033[0;32m'
@@ -9,6 +10,7 @@ export ORANGE='\033[0;33m'
 WORKING_DIR="/opt/cybercorps"
 INSTALL_SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd -P)"
 RAW_BASE_URL="${CDSS_RAW_BASE_URL:-https://raw.githubusercontent.com/corpus-dev/CDSS/main}"
+CDSS_GIT_URL="${CDSS_GIT_URL:-https://github.com/corpus-dev/CDSS.git}"
 BOOTSTRAP_DIR=""
 
 cleanup_bootstrap_dir() {
@@ -70,9 +72,8 @@ export SCRIPT_DIR="$INSTALL_SOURCE_DIR"
 source_cdss_file "utils/privileges.sh"
 source_cdss_file "utils/platform_matrix.sh"
 
-if ! source_cdss_file "utils/translate.sh" optional; then
-  trans() { echo "$@"; }
-fi
+trans() { echo "$@"; }
+source_cdss_file "utils/translate.sh" optional || true
 
 # Parse --lang argument for localization during install
 INSTALL_LANG=""
@@ -114,14 +115,14 @@ support_level=$(get_platform_support_level)
 require_privileges
 
 if [[ "$support_level" == "unsupported" ]]; then
-  echo -e "${RED}$(trans "Дистрибутив '$dist_id' не підтримується. Встановлення призупинено.")${NC}"
-  echo -e "${RED}$(trans "Сімейство: $dist_family. Init: $init_system. Arch: $arch.")${NC}"
+  echo -e "${RED}$(transf "Дистрибутив '%s' не підтримується. Встановлення призупинено." "$dist_id")${NC}"
+  echo -e "${RED}$(transf "Сімейство: %s. Init: %s. Arch: %s." "$dist_family" "$init_system" "$arch")${NC}"
   exit 1
 fi
 
 if [[ "$support_level" == "partial" ]]; then
-  echo -e "${ORANGE}$(trans "Дистрибутив '$dist_id' має partial support. Деякі функції можуть бути обмежені.")${NC}"
-  echo -e "${ORANGE}$(trans "Сімейство: $dist_family. Init: $init_system. Arch: $arch.")${NC}"
+  echo -e "${ORANGE}$(transf "Дистрибутив '%s' має partial support. Деякі функції можуть бути обмежені." "$dist_id")${NC}"
+  echo -e "${ORANGE}$(transf "Сімейство: %s. Init: %s. Arch: %s." "$dist_family" "$init_system" "$arch")${NC}"
   echo -e "${ORANGE}$(trans "Натисніть Enter для продовження або Ctrl+C для виходу.")${NC}"
   read -n 1 -s || exit 1
 fi
@@ -130,7 +131,7 @@ ensure_cdss_service_user
 
 pkg_manager=$(get_package_manager)
 if [[ "$pkg_manager" == "unknown" ]]; then
-  echo -e "${RED}$(trans "Менеджер пакетів не знайдено для '$dist_id'")${NC}"
+  echo -e "${RED}$(transf "Менеджер пакетів не знайдено для '%s'" "$dist_id")${NC}"
   exit 1
 fi
 
@@ -138,7 +139,7 @@ assert_supported_init_for_distribution || true
 
 base_packages=$(get_base_packages_for_distribution)
 if [[ "$base_packages" == "unknown" ]]; then
-  echo -e "${RED}$(trans "Базові пакети не визначено для сімейства '$dist_family'")${NC}"
+  echo -e "${RED}$(transf "Базові пакети не визначено для сімейства '%s'" "$dist_family")${NC}"
   exit 1
 fi
 
@@ -150,7 +151,7 @@ if ! sudo_or_root "$pkg_manager" update -y; then
   exit 1
 fi
 for pkg in $base_packages; do
-  echo -e "${GREEN}$(trans "Встановлюємо $pkg")${NC}"
+  echo -e "${GREEN}$(transf "Встановлюємо %s" "$pkg")${NC}"
   case "$pkg_manager" in
     apt-get)
       sudo_or_root apt-get install -y "$pkg"
@@ -168,7 +169,7 @@ for pkg in $base_packages; do
       sudo_or_root "$pkg_manager" -n "$pkg"
       ;;
     *)
-      echo -e "${RED}$(trans "Невідомий пакет менеджер: $pkg_manager")${NC}"
+      echo -e "${RED}$(transf "Невідомий пакет менеджер: %s" "$pkg_manager")${NC}"
       exit 1
       ;;
   esac
@@ -179,13 +180,26 @@ if [[ -d "$WORKING_DIR" ]] && [[ "$(ls -A "$WORKING_DIR")" ]]; then
   export SCRIPT_DIR="${WORKING_DIR}"
   source "${WORKING_DIR}/utils/updater.sh"
   source "${WORKING_DIR}/utils/translate.sh"
-  update_cdss
+  install_update_status=0
+  if update_cdss; then
+    merge_environment_file || true
+    if [[ -f "${WORKING_DIR}/utils/definitions.sh" ]]; then
+      source "${WORKING_DIR}/utils/definitions.sh"
+    fi
+    if [[ -f "${WORKING_DIR}/utils/runtime_environment.sh" ]]; then
+      source "${WORKING_DIR}/utils/runtime_environment.sh"
+      ensure_runtime_update_environment
+    fi
+  else
+    install_update_status=1
+  fi
   install_cdss_command
+  exit "$install_update_status"
 else
   sudo_or_root mkdir -p "$WORKING_DIR"
   sudo_or_root chown "$(get_real_user)" "$WORKING_DIR"
   echo -e "${GREEN}$(trans "Клонуємо CDSS...")${NC}"
-  if ! git clone https://github.com/corpus-dev/CDSS.git "$WORKING_DIR"; then
+  if ! git clone "$CDSS_GIT_URL" "$WORKING_DIR"; then
     echo -e "${RED}$(trans "git clone CDSS не вдався.")${NC}"
     exit 1
   fi

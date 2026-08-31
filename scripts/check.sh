@@ -18,8 +18,16 @@ echo "========================================"
 echo ""
 
 # Крок 1: bash -n syntax check
-echo "[1/3] Syntax check (bash -n)..."
+echo "[1/4] Syntax check (bash -n)..."
 echo "---"
+
+if bash -n "$SCRIPT_DIR/bin/cdss" 2>/dev/null; then
+  echo "  OK: $SCRIPT_DIR/bin/cdss"
+else
+  echo "  FAIL: $SCRIPT_DIR/bin/cdss"
+  bash -n "$SCRIPT_DIR/bin/cdss" 2>&1 || true
+  ((ERRORS++)) || true
+fi
 
 while read -r file; do
   if bash -n "$file" 2>/dev/null; then
@@ -34,18 +42,24 @@ done < <(find "$SCRIPT_DIR" -name "*.sh" -type f | sort)
 echo ""
 
 # Крок 2: ShellCheck (якщо доступний)
-echo "[2/3] ShellCheck..."
+echo "[2/4] ShellCheck..."
 echo "---"
 
 if command -v shellcheck >/dev/null 2>&1; then
   while read -r file; do
-    if shellcheck "$file" 2>/dev/null; then
+    if shellcheck -S error "$file" 2>/dev/null; then
       echo "  OK: $file"
     else
-      echo "  WARN: $file (shellcheck found issues)"
-      shellcheck "$file" 2>&1 || true
+      echo "  FAIL: $file (shellcheck errors found)"
+      shellcheck -S error "$file" 2>&1 || true
+      ((ERRORS++)) || true
     fi
-  done < <(find "$SCRIPT_DIR" -name "*.sh" -type f | sort)
+  done < <(
+    {
+      echo "$SCRIPT_DIR/bin/cdss"
+      find "$SCRIPT_DIR" -name "*.sh" -type f
+    } | sort
+  )
 else
   echo "  ShellCheck не встановлено. Запустіть: apt install shellcheck"
   echo "  Це НЕ повна перевiрка, але bash -n пройшов."
@@ -54,7 +68,7 @@ fi
 echo ""
 
 # Крок 3: Перевірка наявності helper-ів
-echo "[3/3] Helper-coverage check..."
+echo "[3/4] Helper-coverage check..."
 echo "---"
 
 REQUIRED_HELPERS=(
@@ -89,6 +103,19 @@ for helper in "${REQUIRED_HELPERS[@]}"; do
     ((ERRORS++)) || true
   fi
 done
+
+echo ""
+
+# Крок 4: i18n coverage
+echo "[4/4] i18n coverage check..."
+echo "---"
+
+if bash "$SCRIPT_DIR/tests/i18n_coverage.sh"; then
+  echo "  OK: tests/i18n_coverage.sh"
+else
+  echo "  FAIL: tests/i18n_coverage.sh"
+  ((ERRORS++)) || true
+fi
 
 echo ""
 echo "========================================"
