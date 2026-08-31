@@ -194,8 +194,26 @@ ensure_runtime_service_reload() {
   return 0
 }
 
+ensure_cdss_update_cron() {
+  command -v cron_install_job >/dev/null 2>&1 || return 0
+  command -v cron_has_job >/dev/null 2>&1 || return 0
+
+  if cron_has_job "cdss_update_only"; then
+    return 0
+  fi
+
+  cron_install_job "cdss_update_only" "*/5 * * * *" "bash ${SCRIPT_DIR}/bin/cdss --update-only >> /var/log/cdss.log 2>&1" || true
+  return 0
+}
+
 ensure_runtime_update_environment() {
+  if command -v ensure_canonical_update_sources >/dev/null 2>&1; then
+    ensure_canonical_update_sources || true
+  fi
   ensure_module_runtime_permissions
+  if command -v ensure_cdss_update_cron >/dev/null 2>&1; then
+    ensure_cdss_update_cron || true
+  fi
   local policy_status=1
   ensure_module_service_policy || policy_status=$?
   if [[ "$policy_status" == 0 ]]; then

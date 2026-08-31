@@ -51,6 +51,7 @@ check_updates() {
 
 prepare_for_update() {
   echo -e "${GREEN}$(trans "Перевіряємо наявність оновлень")${NC}"
+  ensure_canonical_update_sources || true
   local raw_base_url="${CDSS_RAW_BASE_URL:-https://raw.githubusercontent.com/corpus-dev/CDSS/main}"
   local remote_version
   remote_version=$(curl -s --fail --location --show-error --connect-timeout 10 --max-time 60 "${raw_base_url}/version.txt" 2>/dev/null)
@@ -98,6 +99,65 @@ write_version() {
 
 get_cdss_upstream_url() {
   echo "${CDSS_GIT_URL:-https://github.com/corpus-dev/CDSS.git}"
+}
+
+is_local_git_url() {
+  local url="${1:-}"
+  [[ -n "$url" ]] || return 1
+  case "$url" in
+    /*) return 0 ;;
+    file://*) return 0 ;;
+    *localhost*) return 0 ;;
+    *127.0.0.1*) return 0 ;;
+    *"/var/lib/cdss-wsl-test"*) return 0 ;;
+    *"/root/"*) return 0 ;;
+    *"/tmp/"*) return 0 ;;
+  esac
+  return 1
+}
+
+ensure_git_safe_directory() {
+  local target="${1:-${SCRIPT_DIR}}"
+  [[ -n "$target" && -d "$target" ]] || return 0
+  command -v git >/dev/null 2>&1 || return 0
+  if ! sudo_or_root git config --global --get-all safe.directory 2>/dev/null | grep -qx -- "$target"; then
+    sudo_or_root git config --global --add safe.directory "$target" 2>/dev/null || true
+  fi
+  return 0
+}
+
+log_update_sources_event() {
+  local message="$1"
+  if command -v log_cdss_event >/dev/null 2>&1; then
+    log_cdss_event "$message"
+  else
+    logger "CDSS: $message" 2>/dev/null || true
+  fi
+}
+
+ensure_canonical_update_sources() {
+  local upstream_url
+  upstream_url=$(get_cdss_upstream_url)
+  [[ -n "$upstream_url" ]] || return 0
+  command -v git >/dev/null 2>&1 || return 0
+  [[ -d "${SCRIPT_DIR}/.git" ]] || return 0
+
+  ensure_git_safe_directory "${SCRIPT_DIR}"
+
+  local origin_url
+  origin_url=$(cd "${SCRIPT_DIR}" && sudo_or_root git remote get-url origin 2>/dev/null) || true
+
+  if [[ -z "$origin_url" ]]; then
+    if (cd "${SCRIPT_DIR}" && sudo_or_root git remote add origin "$upstream_url" >/dev/null 2>&1); then
+      log_update_sources_event "update sources: added origin ${upstream_url}"
+    fi
+  elif [[ "$origin_url" != "$upstream_url" ]] && is_local_git_url "$origin_url" && ! is_local_git_url "$upstream_url"; then
+    if (cd "${SCRIPT_DIR}" && sudo_or_root git remote set-url origin "$upstream_url" >/dev/null 2>&1); then
+      log_update_sources_event "update sources: replaced local origin ${origin_url} with ${upstream_url}"
+    fi
+  fi
+
+  return 0
 }
 
 backup_module_settings() {
@@ -195,9 +255,8 @@ force_sync_cdss() {
     return 1
   fi
 
-  if ! sudo_or_root git config --global --get-all safe.directory 2>/dev/null | grep -qx -- "${SCRIPT_DIR}"; then
-    sudo_or_root git config --global --add safe.directory "${SCRIPT_DIR}" 2>/dev/null || true
-  fi
+  ensure_canonical_update_sources || true
+  ensure_git_safe_directory "${SCRIPT_DIR}"
 
   old_commit=$(cd "${SCRIPT_DIR}" && sudo_or_root git rev-parse HEAD 2>/dev/null) || old_commit=""
   if [[ -z "$old_commit" ]]; then

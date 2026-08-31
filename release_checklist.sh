@@ -108,12 +108,15 @@ check "mhddos regenerate canonical ReadWritePaths" grep -q 'ReadWritePaths=${SCR
 check "distress regenerate canonical ReadWritePaths" grep -q 'ReadWritePaths=${SCRIPT_DIR} ${SCRIPT_DIR}/bin /var/log /tmp' utils/distress.sh
 check "x100 regenerate canonical ReadWritePaths" grep -q 'ReadWritePaths=${SCRIPT_DIR}/x100-for-docker /var/log /tmp' utils/x100.sh
 check "bin/cdss repair-runtime mode" grep -q -- "--repair-runtime" bin/cdss
+check "bin/cdss update-only mode" grep -q -- "--update-only" bin/cdss
 check "bin/cdss ensure_runtime_update_environment" grep -q "ensure_runtime_update_environment" bin/cdss
 check "updater force_sync_cdss defined" grep -q "force_sync_cdss()" utils/updater.sh
 check "updater backup_module_settings defined" grep -q "backup_module_settings()" utils/updater.sh
 check "updater merge_environment_file defined" grep -q "merge_environment_file()" utils/updater.sh
 check "updater uses sudo_or_root git reset" grep -q "sudo_or_root git reset --hard FETCH_HEAD" utils/updater.sh
 check "updater uses canonical upstream URL" grep -q "CDSS_GIT_URL:-https://github.com/corpus-dev/CDSS.git" utils/updater.sh
+check "updater ensures canonical update sources" grep -q "ensure_canonical_update_sources()" utils/updater.sh
+check "runtime installs update-only cron" grep -q "cdss_update_only" utils/runtime_environment.sh
 
 echo ""
 echo -e "Результат: ${GREEN}$PASS${NC} пройдено, ${RED}$FAIL${NC} провалено"

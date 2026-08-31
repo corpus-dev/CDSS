@@ -271,6 +271,56 @@ test_force_sync_cdss() {
   SCRIPT_DIR="$old_script_dir"
 }
 
+test_ensure_canonical_update_sources() {
+  local tmp="$TMP_DIR/canonical-sources"
+  local work="$tmp/work"
+  local local_origin="$tmp/local-origin.git"
+  mkdir -p "$tmp"
+
+  git init --bare "$local_origin" >/dev/null 2>&1
+  git init "$work" >/dev/null 2>&1
+  git -C "$work" checkout -b main >/dev/null 2>&1
+  git -C "$work" config user.email "test@example.com"
+  git -C "$work" config user.name "CDSS Test"
+
+  echo "test" > "$work/README.md"
+  git -C "$work" add -A
+  git -C "$work" commit -m "initial" >/dev/null 2>&1
+  git -C "$work" remote add origin "$local_origin"
+  git -C "$work" push origin main >/dev/null 2>&1
+
+  local old_script_dir="$SCRIPT_DIR"
+  local old_cdss_git_url="${CDSS_GIT_URL:-}"
+  SCRIPT_DIR="$work"
+  export CDSS_GIT_URL="https://github.com/corpus-dev/CDSS.git"
+
+  assert_success ensure_canonical_update_sources
+  assert_eq "https://github.com/corpus-dev/CDSS.git" "$(git -C "$work" remote get-url origin)" "local origin replaced with canonical upstream"
+
+  if [[ -n "$old_cdss_git_url" ]]; then
+    export CDSS_GIT_URL="$old_cdss_git_url"
+  else
+    unset CDSS_GIT_URL
+  fi
+  SCRIPT_DIR="$old_script_dir"
+}
+
+test_ensure_cdss_update_cron() {
+  local calls=0
+  cron_has_job() {
+    return 1
+  }
+  cron_install_job() {
+    calls=$((calls + 1))
+    [[ "$2" == "*/5 * * * *" ]] && [[ "$3" == *"--update-only"* ]]
+  }
+
+  assert_success ensure_cdss_update_cron
+  assert_eq "1" "$calls" "update-only cron installed"
+
+  unset -f cron_has_job cron_install_job
+}
+
 test_module_paths
 test_validate_service_file
 test_service_file_set_directive
@@ -278,6 +328,8 @@ test_backup_and_merge_environment_file
 test_ensure_module_service_policy
 test_ensure_module_runtime_permissions
 test_repair_runtime_non_systemd
+test_ensure_canonical_update_sources
+test_ensure_cdss_update_cron
 test_force_sync_cdss
 
 echo "tests/test_runtime_environment.sh: OK"

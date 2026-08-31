@@ -208,6 +208,23 @@ elif [ "${1:-}" = "--repair-runtime" ]; then
     exit 1
   fi
   exit 0
+elif [ "${1:-}" = "--update-only" ]; then
+  truncate_large_cdss_log
+  update_lock_file="/var/lib/cdss/update.lock"
+  sudo_or_root mkdir -p "/var/lib/cdss" 2>/dev/null || true
+  exec 200>"${update_lock_file}" 2>/dev/null || true
+  if command -v flock >/dev/null 2>&1; then
+    if ! flock -n 200 2>/dev/null; then
+      exit 0
+    fi
+  fi
+  check_updates
+  reload_runtime_files
+  if [[ "$CDSS_UPDATED" == "1" ]]; then
+    regenerate_module_service_files
+  fi
+  ensure_runtime_update_environment
+  exit 0
 else
   check_updates
   reload_runtime_files

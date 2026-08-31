@@ -59,5 +59,8 @@ fi
 grep -q '^ReadWritePaths=/opt/cybercorps /opt/cybercorps/bin /var/log /tmp$' "$ROOT_DIR/services/mhddos.service"
 grep -q '^ReadWritePaths=/opt/cybercorps /opt/cybercorps/bin /var/log /tmp$' "$ROOT_DIR/services/distress.service"
 grep -q '^ReadWritePaths=/opt/cybercorps/x100-for-docker /var/log /tmp$' "$ROOT_DIR/services/x100.service"
+grep -q -- "--update-only" "$ROOT_DIR/bin/cdss"
+grep -q "ensure_canonical_update_sources" "$ROOT_DIR/utils/updater.sh"
+grep -q "cdss_update_only" "$ROOT_DIR/utils/runtime_environment.sh"
 
 echo "smoke_wsl.sh: OK"
