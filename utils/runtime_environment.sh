@@ -7,7 +7,7 @@ get_module_readwrite_paths() {
   local module="$1"
   case "$module" in
     mhddos|distress)
-      echo "${SCRIPT_DIR}/bin /var/log /tmp"
+      echo "${SCRIPT_DIR} ${SCRIPT_DIR}/bin /var/log /tmp"
       ;;
     x100)
       echo "${SCRIPT_DIR}/x100-for-docker /var/log /tmp"
@@ -119,6 +119,13 @@ ensure_module_runtime_permissions() {
     if [[ -f "$runtime_file" ]]; then
       sudo_or_root chown cdss:cdss "$runtime_file" 2>/dev/null || true
       sudo_or_root chmod 755 "$runtime_file" 2>/dev/null || true
+    fi
+  done
+
+  for runtime_file in "${SCRIPT_DIR}/mhddos.ini" "${SCRIPT_DIR}/bin/mhddos.ini"; do
+    if [[ -f "$runtime_file" ]]; then
+      sudo_or_root chown cdss:cdss "$runtime_file" 2>/dev/null || true
+      sudo_or_root chmod 644 "$runtime_file" 2>/dev/null || true
     fi
   done
 

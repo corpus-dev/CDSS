@@ -46,7 +46,7 @@ if [[ "$transf_out" != "Hello WSL" ]]; then
   exit 1
 fi
 
-if [[ "$(get_module_readwrite_paths mhddos)" != "${SCRIPT_DIR}/bin /var/log /tmp" ]]; then
+if [[ "$(get_module_readwrite_paths mhddos)" != "${SCRIPT_DIR} ${SCRIPT_DIR}/bin /var/log /tmp" ]]; then
   echo "smoke_wsl.sh: FAIL mhddos ReadWritePaths"
   exit 1
 fi
@@ -56,8 +56,8 @@ if [[ "$(get_module_readwrite_paths x100)" != "${SCRIPT_DIR}/x100-for-docker /va
   exit 1
 fi
 
-grep -q '^ReadWritePaths=/opt/cybercorps/bin /var/log /tmp$' "$ROOT_DIR/services/mhddos.service"
-grep -q '^ReadWritePaths=/opt/cybercorps/bin /var/log /tmp$' "$ROOT_DIR/services/distress.service"
+grep -q '^ReadWritePaths=/opt/cybercorps /opt/cybercorps/bin /var/log /tmp$' "$ROOT_DIR/services/mhddos.service"
+grep -q '^ReadWritePaths=/opt/cybercorps /opt/cybercorps/bin /var/log /tmp$' "$ROOT_DIR/services/distress.service"
 grep -q '^ReadWritePaths=/opt/cybercorps/x100-for-docker /var/log /tmp$' "$ROOT_DIR/services/x100.service"
 
 echo "smoke_wsl.sh: OK"

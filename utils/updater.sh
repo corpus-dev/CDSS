@@ -96,6 +96,10 @@ write_version() {
   write_env_value "CDSS_DEPLOYMENT_VERSION" "$1"
 }
 
+get_cdss_upstream_url() {
+  echo "${CDSS_GIT_URL:-https://github.com/corpus-dev/CDSS.git}"
+}
+
 backup_module_settings() {
   local backup_dir="${CDSS_BACKUP_DIR:-/var/lib/cdss/last-update-backup}"
   local env_file="${SCRIPT_DIR}/services/EnvironmentFile"
@@ -173,6 +177,8 @@ merge_environment_file() {
 force_sync_cdss() {
   local backup_dir="${CDSS_BACKUP_DIR:-/var/lib/cdss/last-update-backup}"
   local old_commit
+  local upstream_url
+  upstream_url=$(get_cdss_upstream_url)
 
   if ! assert_safe_script_dir "${SCRIPT_DIR}"; then
     echo -e "${RED}$(trans "SCRIPT_DIR не пройшов перевірку. Оновлення скасовано.")${NC}"
@@ -208,21 +214,21 @@ force_sync_cdss() {
   sudo_or_root chown cdss:cdss "$backup_dir"/tracked.diff "$backup_dir"/untracked.txt "$backup_dir"/commit 2>/dev/null || true
   sudo_or_root chmod 644 "$backup_dir"/tracked.diff "$backup_dir"/untracked.txt "$backup_dir"/commit 2>/dev/null || true
 
-  if ! (cd "${SCRIPT_DIR}" && sudo_or_root git ls-remote --exit-code origin main >/dev/null 2>&1); then
+  if ! (cd "${SCRIPT_DIR}" && sudo_or_root git ls-remote --exit-code "$upstream_url" main >/dev/null 2>&1); then
     echo -e "${RED}$(trans "Не вдалося перевірити origin/main. Оновлення скасовано.")${NC}"
-    log_cdss_event "force-sync: origin/main unavailable"
+    log_cdss_event "force-sync: upstream/main unavailable ($upstream_url)"
     return 1
   fi
 
   local git_output
-  if ! git_output=$(cd "${SCRIPT_DIR}" && sudo_or_root git fetch origin main 2>&1); then
+  if ! git_output=$(cd "${SCRIPT_DIR}" && sudo_or_root git fetch "$upstream_url" main 2>&1); then
     [[ -n "$git_output" ]] && echo "$git_output"
     echo -e "${RED}$(trans "git fetch зазнав помилки. Поточна версія не змінена.")${NC}"
-    log_cdss_event "force-sync: git fetch failed"
+    log_cdss_event "force-sync: git fetch failed ($upstream_url)"
     return 1
   fi
 
-  if ! git_output=$(cd "${SCRIPT_DIR}" && sudo_or_root git reset --hard origin/main 2>&1); then
+  if ! git_output=$(cd "${SCRIPT_DIR}" && sudo_or_root git reset --hard FETCH_HEAD 2>&1); then
     [[ -n "$git_output" ]] && echo "$git_output"
     echo -e "${RED}$(trans "git reset зазнав помилки. Відновлюємо попередню версію.")${NC}"
     (cd "${SCRIPT_DIR}" && sudo_or_root git reset --hard "$old_commit" 2>/dev/null) || true

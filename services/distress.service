@@ -14,7 +14,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/cybercorps/bin /var/log /tmp
+ReadWritePaths=/opt/cybercorps /opt/cybercorps/bin /var/log /tmp
 
 StandardOutput=append:/var/log/cdss.log
 StandardError=append:/var/log/cdss.log

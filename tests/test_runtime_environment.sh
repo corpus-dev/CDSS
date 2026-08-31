@@ -83,8 +83,8 @@ EOF
 }
 
 test_module_paths() {
-  assert_eq "${SCRIPT_DIR}/bin /var/log /tmp" "$(get_module_readwrite_paths mhddos)" "mhddos ReadWritePaths"
-  assert_eq "${SCRIPT_DIR}/bin /var/log /tmp" "$(get_module_readwrite_paths distress)" "distress ReadWritePaths"
+  assert_eq "${SCRIPT_DIR} ${SCRIPT_DIR}/bin /var/log /tmp" "$(get_module_readwrite_paths mhddos)" "mhddos ReadWritePaths"
+  assert_eq "${SCRIPT_DIR} ${SCRIPT_DIR}/bin /var/log /tmp" "$(get_module_readwrite_paths distress)" "distress ReadWritePaths"
   assert_eq "${SCRIPT_DIR}/x100-for-docker /var/log /tmp" "$(get_module_readwrite_paths x100)" "x100 ReadWritePaths"
 }
 
@@ -95,7 +95,7 @@ test_validate_service_file() {
   SCRIPT_DIR="$svc_dir"
 
   make_base_service_file "$svc_dir/mhddos.service" "mhddos"
-  sed -i "s|^ReadWritePaths=.*|ReadWritePaths=${SCRIPT_DIR}/bin /var/log /tmp|" "$svc_dir/mhddos.service"
+  sed -i "s|^ReadWritePaths=.*|ReadWritePaths=${SCRIPT_DIR} ${SCRIPT_DIR}/bin /var/log /tmp|" "$svc_dir/mhddos.service"
 
   assert_success validate_service_file "$svc_dir/mhddos.service" "mhddos"
 
@@ -115,8 +115,8 @@ test_service_file_set_directive() {
   export CDSS_SERVICE_BACKUP_DIR="$TMP_DIR/service-backups"
 
   make_base_service_file "$svc_dir/distress.service" "distress"
-  assert_success service_file_set_directive "$svc_dir/distress.service" "ReadWritePaths" "${SCRIPT_DIR}/bin /var/log /tmp"
-  assert_eq "${SCRIPT_DIR}/bin /var/log /tmp" "$(grep -m1 '^ReadWritePaths=' "$svc_dir/distress.service" | cut -d'=' -f2-)" "ReadWritePaths updated"
+  assert_success service_file_set_directive "$svc_dir/distress.service" "ReadWritePaths" "${SCRIPT_DIR} ${SCRIPT_DIR}/bin /var/log /tmp"
+  assert_eq "${SCRIPT_DIR} ${SCRIPT_DIR}/bin /var/log /tmp" "$(grep -m1 '^ReadWritePaths=' "$svc_dir/distress.service" | cut -d'=' -f2-)" "ReadWritePaths updated"
 
   SCRIPT_DIR="$old_script_dir"
 }
@@ -163,8 +163,8 @@ test_ensure_module_service_policy() {
   ensure_module_service_policy || status=$?
   assert_eq "0" "$status" "ensure_module_service_policy should report changes"
 
-  assert_eq "${SCRIPT_DIR}/bin /var/log /tmp" "$(grep -m1 '^ReadWritePaths=' "$runtime_dir/services/mhddos.service" | cut -d'=' -f2-)" "mhddos policy ReadWritePaths"
-  assert_eq "${SCRIPT_DIR}/bin /var/log /tmp" "$(grep -m1 '^ReadWritePaths=' "$runtime_dir/services/distress.service" | cut -d'=' -f2-)" "distress policy ReadWritePaths"
+  assert_eq "${SCRIPT_DIR} ${SCRIPT_DIR}/bin /var/log /tmp" "$(grep -m1 '^ReadWritePaths=' "$runtime_dir/services/mhddos.service" | cut -d'=' -f2-)" "mhddos policy ReadWritePaths"
+  assert_eq "${SCRIPT_DIR} ${SCRIPT_DIR}/bin /var/log /tmp" "$(grep -m1 '^ReadWritePaths=' "$runtime_dir/services/distress.service" | cut -d'=' -f2-)" "distress policy ReadWritePaths"
 
   status=0
   ensure_module_service_policy || status=$?
@@ -215,6 +215,7 @@ test_force_sync_cdss() {
 
   local tmp="$TMP_DIR/git"
   local origin="$tmp/origin.git"
+  local stale_origin="$tmp/stale-origin.git"
   local work="$tmp/work"
   local upstream="$tmp/upstream"
   mkdir -p "$tmp"
@@ -226,6 +227,7 @@ test_force_sync_cdss() {
   git config --global init.defaultBranch main
 
   git init --bare "$origin" >/dev/null 2>&1
+  git init --bare "$stale_origin" >/dev/null 2>&1
   git init "$work" >/dev/null 2>&1
   git -C "$work" checkout -b main >/dev/null 2>&1
 
@@ -238,8 +240,9 @@ test_force_sync_cdss() {
 
   git -C "$work" add -A
   git -C "$work" commit -m "initial" >/dev/null 2>&1
-  git -C "$work" remote add origin "$origin"
+  git -C "$work" remote add origin "$stale_origin"
   git -C "$work" push origin main >/dev/null 2>&1
+  git -C "$work" push "$origin" main >/dev/null 2>&1
 
   git clone "$origin" "$upstream" >/dev/null 2>&1
   echo "upstream-update" >> "$upstream/README.md"
@@ -251,6 +254,7 @@ test_force_sync_cdss() {
   local old_script_dir="$SCRIPT_DIR"
   SCRIPT_DIR="$work"
   export CDSS_BACKUP_DIR="$tmp/backup"
+  export CDSS_GIT_URL="$origin"
   mkdir -p "$CDSS_BACKUP_DIR"
 
   assert_success force_sync_cdss
